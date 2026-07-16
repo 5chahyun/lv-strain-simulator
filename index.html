@@ -1,0 +1,2334 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>LV Strain Simulator — 좌심실 변형 시뮬레이션</title>
+  <meta name="description" content="Interactive Left Ventricular Strain simulation for echocardiography education. Visualize GLS, bull's eye plots, and strain curves." />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet" />
+  <style>
+/* ============================================================
+   LV Strain Simulator — Presentation-Optimized Dark Theme
+   High contrast, large text, projector-friendly
+   ============================================================ */
+
+:root {
+  /* Color System — HIGH CONTRAST for presentations */
+  --bg-primary: #080c16;
+  --bg-secondary: #0f1520;
+  --bg-panel: #131a2c;
+  --bg-panel-hover: #1a2338;
+  --border-subtle: rgba(255, 255, 255, 0.1);
+  --border-active: rgba(99, 149, 255, 0.45);
+
+  /* Text — BRIGHT for readability on projectors */
+  --text-primary: #f0f4ff;
+  --text-secondary: #c0c8dc;
+  --text-muted: #8a96b4;
+
+  /* Accents — VIVID for visibility */
+  --accent-blue: #7aacff;
+  --accent-cyan: #5dd3f5;
+  --accent-pink: #f78cc4;
+  --accent-red: #ff6b6b;
+  --accent-green: #5eeaaf;
+  --accent-amber: #ffd04a;
+  --accent-purple: #bea3ff;
+
+  /* Strain Color Scale */
+  --strain-normal: #2563eb;
+  --strain-mild: #38bdf8;
+  --strain-reduced: #fbbf24;
+  --strain-severe: #ef4444;
+  --strain-dyskinetic: #dc2626;
+
+  /* Shadows */
+  --shadow-panel: 0 4px 24px rgba(0, 0, 0, 0.5), 0 1px 4px rgba(0, 0, 0, 0.3);
+  --shadow-glow: 0 0 20px rgba(99, 149, 255, 0.2);
+
+  /* Transitions */
+  --transition-fast: 150ms cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-smooth: 300ms cubic-bezier(0.4, 0, 0.2, 1);
+
+  /* Radii */
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 16px;
+  --radius-xl: 20px;
+}
+
+/* ============ Reset & Base ============ */
+*, *::before, *::after {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html {
+  font-size: 18px;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+/* ============ App Container ============ */
+.app-container {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  max-height: 100vh;
+  overflow: hidden;
+}
+
+/* ============ Header ============ */
+.app-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 14px 28px;
+  background: linear-gradient(180deg, rgba(22, 29, 47, 0.95), rgba(17, 24, 39, 0.9));
+  border-bottom: 1px solid var(--border-subtle);
+  backdrop-filter: blur(20px);
+  z-index: 10;
+}
+
+.header-left {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.logo-icon {
+  width: 44px;
+  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(244, 114, 182, 0.15);
+  border-radius: var(--radius-md);
+  border: 1px solid rgba(244, 114, 182, 0.3);
+}
+
+.app-header h1 {
+  font-size: 1.5rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  background: linear-gradient(135deg, #ffffff, #bea3ff);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.subtitle {
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+  font-weight: 400;
+  margin-top: 2px;
+}
+
+.header-right {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+}
+
+.gls-display,
+.hr-display {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  padding: 10px 18px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+}
+
+.gls-label, .hr-label {
+  font-size: 0.9rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--text-secondary);
+}
+
+.gls-value {
+  font-size: 1.7rem;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  color: var(--accent-blue);
+  transition: color var(--transition-smooth);
+}
+
+.gls-value.abnormal {
+  color: var(--accent-red);
+}
+
+.gls-value.borderline {
+  color: var(--accent-amber);
+}
+
+.hr-value {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--accent-green);
+  font-variant-numeric: tabular-nums;
+}
+
+.hr-unit {
+  font-size: 0.9rem;
+  color: var(--text-secondary);
+}
+
+/* ============ Main Content ============ */
+.main-content {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 16px;
+  padding: 16px 24px;
+  flex: 1;
+  min-height: 0;
+}
+
+/* ============ Panel ============ */
+.panel {
+  background: var(--bg-panel);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-lg);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  transition: border-color var(--transition-smooth);
+}
+
+.panel:hover {
+  border-color: var(--border-active);
+}
+
+.panel-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 14px 18px;
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.panel-header h2 {
+  font-size: 1.05rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  letter-spacing: -0.01em;
+}
+
+.panel-badge {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--accent-purple);
+  background: rgba(167, 139, 250, 0.15);
+  padding: 4px 10px;
+  border-radius: 100px;
+  border: 1px solid rgba(167, 139, 250, 0.3);
+}
+
+/* View / Curve Tabs */
+.view-tabs, .curve-tabs {
+  display: flex;
+  gap: 2px;
+  background: rgba(0, 0, 0, 0.25);
+  border-radius: var(--radius-sm);
+  padding: 3px;
+}
+
+.view-tab, .curve-tab {
+  font-family: inherit;
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  background: transparent;
+  border: none;
+  padding: 5px 12px;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.view-tab:hover, .curve-tab:hover {
+  color: var(--text-primary);
+}
+
+.view-tab.active, .curve-tab.active {
+  background: rgba(99, 149, 255, 0.2);
+  color: var(--accent-blue);
+}
+
+/* ============ LV Panel ============ */
+.canvas-container {
+  flex: 1;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 8px;
+}
+
+.canvas-container canvas {
+  display: block;
+}
+
+#lvCanvas {
+  flex: 1;
+  max-width: 100%;
+  max-height: calc(100% - 70px);
+  object-fit: contain;
+}
+
+.phase-indicator {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  background: rgba(0, 0, 0, 0.5);
+  padding: 6px 14px;
+  border-radius: 100px;
+  backdrop-filter: blur(8px);
+}
+
+.phase-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--accent-green);
+  transition: background var(--transition-fast);
+  box-shadow: 0 0 8px rgba(94, 234, 175, 0.6);
+}
+
+.phase-indicator.systole .phase-dot {
+  background: var(--accent-pink);
+  box-shadow: 0 0 8px rgba(247, 140, 196, 0.6);
+}
+
+.ecg-strip {
+  width: 100%;
+  height: 60px;
+  border-top: 1px solid var(--border-subtle);
+  padding: 4px 0;
+}
+
+#ecgCanvas {
+  width: 100%;
+  height: 100%;
+}
+
+/* ============ Bull's Eye Panel ============ */
+.bullseye-container {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 12px;
+  position: relative;
+}
+
+#bullseyeCanvas {
+  max-width: 100%;
+  max-height: 100%;
+  cursor: crosshair;
+}
+
+.segment-info {
+  display: flex;
+  justify-content: space-between;
+  width: 100%;
+  max-width: 320px;
+  padding: 10px 18px;
+  margin-top: 8px;
+  background: rgba(0, 0, 0, 0.4);
+  border-radius: var(--radius-sm);
+  font-size: 0.95rem;
+}
+
+.seg-name {
+  color: var(--text-primary);
+  font-weight: 600;
+}
+
+.seg-value {
+  color: var(--accent-blue);
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+}
+
+.color-scale {
+  padding: 8px 24px 14px;
+}
+
+.scale-bar {
+  height: 10px;
+  border-radius: 5px;
+  background: linear-gradient(90deg,
+    #2563eb 0%,
+    #38bdf8 25%,
+    #34d399 40%,
+    #fbbf24 60%,
+    #f97316 75%,
+    #ef4444 100%
+  );
+}
+
+.scale-labels {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 6px;
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ============ Curves Panel ============ */
+.curves-container {
+  flex: 1;
+  padding: 8px 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+#curvesCanvas {
+  max-width: 100%;
+  max-height: 100%;
+}
+
+.curves-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  padding: 10px 18px 14px;
+  justify-content: center;
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 0.82rem;
+  color: var(--text-secondary);
+  font-weight: 500;
+}
+
+.legend-dot {
+  width: 10px;
+  height: 4px;
+  border-radius: 2px;
+}
+
+/* ============ Controls Bar ============ */
+.controls-bar {
+  display: flex;
+  align-items: stretch;
+  gap: 20px;
+  padding: 14px 28px;
+  background: linear-gradient(0deg, rgba(19, 26, 44, 0.98), rgba(15, 21, 32, 0.9));
+  border-top: 1px solid var(--border-subtle);
+  backdrop-filter: blur(20px);
+}
+
+.control-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.pathology-group {
+  flex: 2;
+}
+
+.info-group {
+  flex: 1.5;
+}
+
+.control-label {
+  font-size: 0.85rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--text-secondary);
+}
+
+/* Pathology Selector */
+.pathology-selector {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.path-btn {
+  font-family: inherit;
+  font-size: 0.92rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  padding: 7px 14px;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  white-space: nowrap;
+}
+
+.path-btn:hover {
+  color: var(--text-primary);
+  background: rgba(255, 255, 255, 0.1);
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
+.path-btn.active {
+  color: #ffffff;
+  background: rgba(99, 149, 255, 0.2);
+  border-color: rgba(99, 149, 255, 0.5);
+  box-shadow: 0 0 12px rgba(99, 149, 255, 0.15);
+}
+
+/* Slider */
+.slider-container {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.slider {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 150px;
+  height: 5px;
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: 3px;
+  outline: none;
+}
+
+.slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: var(--accent-blue);
+  cursor: pointer;
+  box-shadow: 0 0 8px rgba(122, 172, 255, 0.5);
+  transition: transform var(--transition-fast);
+}
+
+.slider::-webkit-slider-thumb:hover {
+  transform: scale(1.2);
+}
+
+.slider-value {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  font-variant-numeric: tabular-nums;
+  min-width: 52px;
+}
+
+/* Playback Controls */
+.playback-controls {
+  display: flex;
+  gap: 8px;
+}
+
+.play-btn, .reset-btn {
+  font-family: inherit;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(99, 149, 255, 0.15);
+  border: 1px solid rgba(99, 149, 255, 0.35);
+  border-radius: var(--radius-sm);
+  color: var(--accent-blue);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.play-btn:hover, .reset-btn:hover {
+  background: rgba(99, 149, 255, 0.25);
+  border-color: rgba(99, 149, 255, 0.5);
+}
+
+.reset-btn {
+  background: rgba(255, 255, 255, 0.06);
+  border-color: rgba(255, 255, 255, 0.12);
+  color: var(--text-secondary);
+}
+
+.reset-btn:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: var(--text-primary);
+}
+
+/* Info Card */
+.info-card {
+  background: rgba(0, 0, 0, 0.3);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  padding: 12px 16px;
+  flex: 1;
+}
+
+.info-card h3 {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--accent-cyan);
+  margin-bottom: 5px;
+}
+
+.info-card p {
+  font-size: 0.88rem;
+  color: var(--text-secondary);
+  line-height: 1.55;
+}
+
+/* ============ Responsive ============ */
+@media (max-width: 1200px) {
+  .main-content {
+    grid-template-columns: 1fr 1fr;
+  }
+  .curves-panel {
+    grid-column: 1 / -1;
+  }
+}
+
+@media (max-width: 768px) {
+  .main-content {
+    grid-template-columns: 1fr;
+  }
+  .controls-bar {
+    flex-wrap: wrap;
+  }
+}
+
+/* ============ Animations ============ */
+@keyframes pulse-glow {
+  0%, 100% { opacity: 0.6; }
+  50% { opacity: 1; }
+}
+
+.phase-dot {
+  animation: pulse-glow 1s ease-in-out infinite;
+}
+
+/* ============ Scrollbar ============ */
+::-webkit-scrollbar {
+  width: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.25);
+}
+
+</style>
+</head>
+<body>
+  <div class="app-container">
+    <!-- Header -->
+    <header class="app-header">
+      <div class="header-left">
+        <div class="logo-icon">
+          <svg width="28" height="28" viewBox="0 0 28 28" fill="none">
+            <path d="M14 2C8 2 4 7 4 12c0 4 3 8 6 12 1 1.5 2.5 3 4 4 1.5-1 3-2.5 4-4 3-4 6-8 6-12 0-5-4-10-10-10z" fill="url(#heartGrad)" stroke="rgba(255,255,255,0.3)" stroke-width="0.5"/>
+            <defs>
+              <linearGradient id="heartGrad" x1="4" y1="2" x2="24" y2="26">
+                <stop offset="0%" stop-color="#ff6b9d"/>
+                <stop offset="100%" stop-color="#c44569"/>
+              </linearGradient>
+            </defs>
+          </svg>
+        </div>
+        <div>
+          <h1>LV Strain Simulator</h1>
+          <p class="subtitle">좌심실 변형률 시뮬레이션</p>
+        </div>
+      </div>
+      <div class="header-right">
+        <div class="gls-display" id="glsDisplay">
+          <span class="gls-label">GLS</span>
+          <span class="gls-value" id="glsValue">-20.5%</span>
+        </div>
+        <div class="hr-display">
+          <span class="hr-label">HR</span>
+          <span class="hr-value" id="hrValue">72</span>
+          <span class="hr-unit">bpm</span>
+        </div>
+      </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="main-content">
+      <!-- Left Panel: LV Animation -->
+      <section class="panel lv-panel">
+        <div class="panel-header">
+          <h2>Apical 4-Chamber View</h2>
+          <div class="view-tabs">
+            <button class="view-tab active" data-view="a4c">A4C</button>
+            <button class="view-tab" data-view="a2c">A2C</button>
+            <button class="view-tab" data-view="aplax">APLAX</button>
+          </div>
+        </div>
+        <div class="canvas-container">
+          <canvas id="lvCanvas" width="500" height="480"></canvas>
+          <div class="phase-indicator" id="phaseIndicator">
+            <div class="phase-dot"></div>
+            <span>Diastole</span>
+          </div>
+          <div class="ecg-strip" id="ecgStrip">
+            <canvas id="ecgCanvas" width="500" height="60"></canvas>
+          </div>
+        </div>
+      </section>
+
+      <!-- Center Panel: Bull's Eye Plot -->
+      <section class="panel bullseye-panel">
+        <div class="panel-header">
+          <h2>Bull's Eye Plot</h2>
+          <span class="panel-badge">17-Segment</span>
+        </div>
+        <div class="bullseye-container">
+          <canvas id="bullseyeCanvas" width="380" height="380"></canvas>
+          <div class="segment-info" id="segmentInfo">
+            <span class="seg-name">Hover over segment</span>
+            <span class="seg-value">—</span>
+          </div>
+        </div>
+        <div class="color-scale">
+          <div class="scale-bar"></div>
+          <div class="scale-labels">
+            <span>-25%</span>
+            <span>-15%</span>
+            <span>0%</span>
+            <span>+10%</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- Right Panel: Strain Curves -->
+      <section class="panel curves-panel">
+        <div class="panel-header">
+          <h2>Strain Curves</h2>
+          <div class="curve-tabs">
+            <button class="curve-tab active" data-curve="longitudinal">Longitudinal</button>
+            <button class="curve-tab" data-curve="circumferential">Circumferential</button>
+            <button class="curve-tab" data-curve="radial">Radial</button>
+          </div>
+        </div>
+        <div class="curves-container">
+          <canvas id="curvesCanvas" width="520" height="350"></canvas>
+        </div>
+        <div class="curves-legend" id="curvesLegend"></div>
+      </section>
+    </main>
+
+    <!-- Bottom Controls -->
+    <footer class="controls-bar">
+      <div class="control-group pathology-group">
+        <label class="control-label">Pathology</label>
+        <div class="pathology-selector">
+          <button class="path-btn active" data-path="normal">Normal</button>
+          <button class="path-btn" data-path="anterior_mi">Anterior MI</button>
+          <button class="path-btn" data-path="inferior_mi">Inferior MI</button>
+          <button class="path-btn" data-path="dcm">DCM</button>
+          <button class="path-btn" data-path="hcm">HCM</button>
+          <button class="path-btn" data-path="takotsubo">Takotsubo</button>
+        </div>
+      </div>
+      <div class="control-group">
+        <label class="control-label">Heart Rate</label>
+        <div class="slider-container">
+          <input type="range" id="hrSlider" min="40" max="120" value="72" class="slider" />
+          <span class="slider-value" id="hrSliderValue">72 bpm</span>
+        </div>
+      </div>
+      <div class="control-group">
+        <label class="control-label">Playback</label>
+        <div class="playback-controls">
+          <button class="play-btn" id="playPauseBtn">
+            <svg id="playIcon" width="20" height="20" viewBox="0 0 20 20" fill="currentColor">
+              <polygon points="4,2 18,10 4,18"/>
+            </svg>
+            <svg id="pauseIcon" width="20" height="20" viewBox="0 0 20 20" fill="currentColor" style="display:none">
+              <rect x="3" y="2" width="5" height="16" rx="1"/>
+              <rect x="12" y="2" width="5" height="16" rx="1"/>
+            </svg>
+          </button>
+          <button class="reset-btn" id="resetBtn">
+            <svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.5">
+              <path d="M2 9a7 7 0 1 1 1.5 4.3"/>
+              <path d="M2 14V9h5"/>
+            </svg>
+          </button>
+        </div>
+      </div>
+      <div class="control-group info-group">
+        <div class="info-card" id="infoCard">
+          <h3 id="infoTitle">Normal</h3>
+          <p id="infoDesc">정상 좌심실 기능. GLS -18% ~ -22% 범위. 17개 분절에서 균일한 수축 패턴.</p>
+        </div>
+      </div>
+    </footer>
+  </div>
+
+  <script>
+/* ============================================================
+   LV Strain Simulator — Core Application Logic
+   ============================================================ */
+
+// ─── Pathology Data ─────────────────────────────────────────
+// 17-segment AHA model strain values for each pathology
+// Segments: 1-6 Basal, 7-12 Mid, 13-16 Apical, 17 Apex
+const SEGMENT_NAMES = [
+  'Basal Anterior',        // 1
+  'Basal Anteroseptal',    // 2
+  'Basal Inferoseptal',    // 3
+  'Basal Inferior',        // 4
+  'Basal Inferolateral',   // 5
+  'Basal Anterolateral',   // 6
+  'Mid Anterior',          // 7
+  'Mid Anteroseptal',      // 8
+  'Mid Inferoseptal',      // 9
+  'Mid Inferior',          // 10
+  'Mid Inferolateral',     // 11
+  'Mid Anterolateral',     // 12
+  'Apical Anterior',       // 13
+  'Apical Septal',         // 14
+  'Apical Inferior',       // 15
+  'Apical Lateral',        // 16
+  'Apex'                   // 17
+];
+
+const PATHOLOGIES = {
+  normal: {
+    name: 'Normal',
+    nameKo: '정상',
+    description: '정상 좌심실 기능. GLS -18% ~ -22% 범위. 17개 분절에서 균일한 수축 패턴을 보입니다.',
+    strain: [-20, -21, -20, -19, -20, -21, -21, -22, -21, -20, -21, -22, -23, -22, -21, -22, -23],
+    ef: 60,
+    wallMotion: Array(17).fill(1) // 1 = normal
+  },
+  anterior_mi: {
+    name: 'Anterior MI',
+    nameKo: '전벽 심근경색',
+    description: 'LAD 영역 허혈. 전벽 및 중격 분절에서 현저한 strain 감소. Apical akinesia/dyskinesia.',
+    strain: [-5, -6, -18, -19, -20, -8, -4, -5, -17, -18, -19, -7, -2, -3, -16, -5, 3],
+    ef: 35,
+    wallMotion: [0.2, 0.25, 1, 1, 1, 0.3, 0.15, 0.2, 0.9, 1, 1, 0.3, 0.05, 0.1, 0.85, 0.2, -0.1]
+  },
+  inferior_mi: {
+    name: 'Inferior MI',
+    nameKo: '하벽 심근경색',
+    description: 'RCA 영역 허혈. 하벽 및 하중격 분절에서 strain 감소. Base-to-apex gradient 소실.',
+    strain: [-20, -19, -8, -5, -9, -20, -21, -20, -7, -4, -8, -21, -22, -19, -6, -20, -21],
+    ef: 42,
+    wallMotion: [1, 0.95, 0.3, 0.2, 0.35, 1, 1, 1, 0.3, 0.15, 0.3, 1, 1, 0.95, 0.25, 1, 1]
+  },
+  dcm: {
+    name: 'DCM',
+    nameKo: '확장성 심근병증',
+    description: '전반적 수축기능 저하. 모든 분절에서 균일한 strain 감소. 심실 확장 동반.',
+    strain: [-8, -9, -8, -7, -8, -9, -9, -10, -9, -8, -9, -10, -10, -10, -9, -10, -11],
+    ef: 25,
+    wallMotion: Array(17).fill(0.4)
+  },
+  hcm: {
+    name: 'HCM',
+    nameKo: '비후성 심근병증',
+    description: '비대칭 중격 비후. 중격 분절에서 strain 감소, 측벽은 보상적 증가. EF 보존.',
+    strain: [-15, -8, -7, -14, -18, -20, -16, -7, -6, -13, -19, -21, -18, -8, -14, -20, -19],
+    ef: 65,
+    wallMotion: [0.7, 0.35, 0.3, 0.65, 0.9, 1, 0.75, 0.3, 0.25, 0.6, 0.95, 1.05, 0.85, 0.35, 0.65, 1, 0.9]
+  },
+  takotsubo: {
+    name: 'Takotsubo',
+    nameKo: '타코츠보 심근병증',
+    description: '심첨부 풍선 현상. Apical akinesia와 basal hyperkinesia가 특징적. 스트레스성 심근병증.',
+    strain: [-25, -26, -25, -24, -25, -26, -20, -19, -19, -18, -19, -20, -3, -4, -4, -3, 5],
+    ef: 38,
+    wallMotion: [1.3, 1.35, 1.3, 1.25, 1.3, 1.35, 1, 0.95, 0.95, 0.9, 0.95, 1, 0.1, 0.15, 0.15, 0.1, -0.15]
+  }
+};
+
+// ─── Color Utilities ────────────────────────────────────────
+function strainToColor(strain) {
+  // Map strain value to color
+  // Normal: ~-20% (blue), Mild: ~-15% (cyan), Reduced: ~-10% (yellow), Severe: ~-5% (orange), Dyskinetic: >0% (red)
+  const s = Math.max(-25, Math.min(10, strain));
+  let r, g, b;
+
+  if (s <= -20) {
+    // Deep blue
+    const t = (s + 25) / 5;
+    r = Math.round(20 + t * 17);
+    g = Math.round(60 + t * 39);
+    b = Math.round(180 + t * 55);
+  } else if (s <= -15) {
+    // Blue to cyan
+    const t = (s + 20) / 5;
+    r = Math.round(37 + t * 19);
+    g = Math.round(99 + t * 90);
+    b = Math.round(235 - t * 10);
+  } else if (s <= -10) {
+    // Cyan to green
+    const t = (s + 15) / 5;
+    r = Math.round(56 + t * 0);
+    g = Math.round(189 + t * 22);
+    b = Math.round(225 - t * 72);
+  } else if (s <= -5) {
+    // Green to yellow
+    const t = (s + 10) / 5;
+    r = Math.round(56 + t * 195);
+    g = Math.round(211 - t * 20);
+    b = Math.round(153 - t * 117);
+  } else if (s <= 0) {
+    // Yellow to orange
+    const t = (s + 5) / 5;
+    r = Math.round(251 - t * 2);
+    g = Math.round(191 - t * 62);
+    b = Math.round(36 + t * 0);
+  } else {
+    // Orange to red
+    const t = Math.min(s / 10, 1);
+    r = Math.round(249 - t * 10);
+    g = Math.round(129 - t * 79);
+    b = Math.round(36 - t * 36);
+  }
+
+  return `rgb(${r}, ${g}, ${b})`;
+}
+
+function strainToAlpha(strain) {
+  const abs = Math.abs(strain);
+  return Math.min(1, abs / 25 * 0.7 + 0.3);
+}
+
+// ─── Application State ──────────────────────────────────────
+const state = {
+  pathology: 'normal',
+  heartRate: 72,
+  isPlaying: true,
+  time: 0,
+  phase: 0, // 0-1 for one cardiac cycle
+  view: 'a4c',
+  curveType: 'longitudinal',
+  hoveredSegment: -1,
+  ecgBuffer: [],
+  strainCurveData: {},
+  animFrameId: null
+};
+
+// ─── Canvas Contexts ─────────────────────────────────────────
+let lvCtx, bullseyeCtx, curvesCtx, ecgCtx;
+let lvCanvas, bullseyeCanvas, curvesCanvas, ecgCanvas;
+
+// ─── Initialization ──────────────────────────────────────────
+function init() {
+  lvCanvas = document.getElementById('lvCanvas');
+  bullseyeCanvas = document.getElementById('bullseyeCanvas');
+  curvesCanvas = document.getElementById('curvesCanvas');
+  ecgCanvas = document.getElementById('ecgCanvas');
+
+  lvCtx = lvCanvas.getContext('2d');
+  bullseyeCtx = bullseyeCanvas.getContext('2d');
+  curvesCtx = curvesCanvas.getContext('2d');
+  ecgCtx = ecgCanvas.getContext('2d');
+
+  setupDPR(lvCanvas, lvCtx);
+  setupDPR(bullseyeCanvas, bullseyeCtx);
+  setupDPR(curvesCanvas, curvesCtx);
+  setupDPR(ecgCanvas, ecgCtx);
+
+  bindEvents();
+  generateStrainCurves();
+  requestAnimationFrame(animate);
+}
+
+function setupDPR(canvas, ctx) {
+  const dpr = window.devicePixelRatio || 1;
+  const rect = canvas.getBoundingClientRect();
+  const w = canvas.width;
+  const h = canvas.height;
+  canvas.width = w * dpr;
+  canvas.height = h * dpr;
+  canvas.style.width = w + 'px';
+  canvas.style.height = h + 'px';
+  ctx.scale(dpr, dpr);
+  canvas._logicalWidth = w;
+  canvas._logicalHeight = h;
+}
+
+// ─── Event Binding ──────────────────────────────────────────
+function bindEvents() {
+  // Pathology buttons
+  document.querySelectorAll('.path-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.path-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      state.pathology = btn.dataset.path;
+      updatePathologyInfo();
+      generateStrainCurves();
+    });
+  });
+
+  // View tabs
+  document.querySelectorAll('.view-tab').forEach(tab => {
+    tab.addEventListener('click', () => {
+      document.querySelectorAll('.view-tab').forEach(t => t.classList.remove('active'));
+      tab.classList.add('active');
+      state.view = tab.dataset.view;
+    });
+  });
+
+  // Curve tabs
+  document.querySelectorAll('.curve-tab').forEach(tab => {
+    tab.addEventListener('click', () => {
+      document.querySelectorAll('.curve-tab').forEach(t => t.classList.remove('active'));
+      tab.classList.add('active');
+      state.curveType = tab.dataset.curve;
+      generateStrainCurves();
+    });
+  });
+
+  // Heart rate slider
+  const hrSlider = document.getElementById('hrSlider');
+  hrSlider.addEventListener('input', () => {
+    state.heartRate = parseInt(hrSlider.value);
+    document.getElementById('hrSliderValue').textContent = state.heartRate + ' bpm';
+    document.getElementById('hrValue').textContent = state.heartRate;
+  });
+
+  // Play/Pause
+  document.getElementById('playPauseBtn').addEventListener('click', togglePlay);
+
+  // Reset
+  document.getElementById('resetBtn').addEventListener('click', () => {
+    state.time = 0;
+    state.phase = 0;
+    state.ecgBuffer = [];
+  });
+
+  // Bull's eye hover
+  bullseyeCanvas.addEventListener('mousemove', handleBullseyeHover);
+  bullseyeCanvas.addEventListener('mouseleave', () => {
+    state.hoveredSegment = -1;
+    document.getElementById('segmentInfo').querySelector('.seg-name').textContent = 'Hover over segment';
+    document.getElementById('segmentInfo').querySelector('.seg-value').textContent = '—';
+  });
+}
+
+function togglePlay() {
+  state.isPlaying = !state.isPlaying;
+  document.getElementById('playIcon').style.display = state.isPlaying ? 'none' : 'block';
+  document.getElementById('pauseIcon').style.display = state.isPlaying ? 'block' : 'none';
+}
+
+function updatePathologyInfo() {
+  const p = PATHOLOGIES[state.pathology];
+  document.getElementById('infoTitle').textContent = `${p.name} (${p.nameKo})`;
+  document.getElementById('infoDesc').textContent = p.description;
+}
+
+// ─── Strain Curve Generation ─────────────────────────────────
+function generateStrainCurves() {
+  const p = PATHOLOGIES[state.pathology];
+  const curves = {};
+
+  for (let seg = 0; seg < 17; seg++) {
+    const peakStrain = p.strain[seg];
+    const points = [];
+
+    for (let t = 0; t <= 100; t++) {
+      const phase = t / 100;
+      let val;
+
+      if (state.curveType === 'longitudinal') {
+        val = computeLongitudinalStrain(phase, peakStrain, p.wallMotion[seg]);
+      } else if (state.curveType === 'circumferential') {
+        val = computeLongitudinalStrain(phase, peakStrain * 0.55, p.wallMotion[seg]);
+      } else {
+        val = computeRadialStrain(phase, -peakStrain * 1.8, p.wallMotion[seg]);
+      }
+      points.push(val);
+    }
+    curves[seg] = points;
+  }
+
+  state.strainCurveData = curves;
+  updateLegend();
+}
+
+function computeLongitudinalStrain(phase, peak, wallMotion) {
+  // Simulate strain curve: 0 at phase 0, peak at ~0.35 (end-systole), return toward 0
+  let val;
+  if (phase < 0.08) {
+    // IVC - slight positive
+    val = phase / 0.08 * 2 * wallMotion;
+  } else if (phase < 0.35) {
+    // Systolic shortening
+    const t = (phase - 0.08) / 0.27;
+    val = 2 * wallMotion + (peak - 2) * Math.sin(t * Math.PI / 2) * wallMotion;
+  } else if (phase < 0.45) {
+    // IVR
+    const t = (phase - 0.35) / 0.1;
+    val = peak * wallMotion * (1 - t * 0.1);
+  } else if (phase < 0.7) {
+    // Early diastole - rapid relaxation
+    const t = (phase - 0.45) / 0.25;
+    val = peak * wallMotion * 0.9 * (1 - t * 0.7);
+  } else {
+    // Late diastole - return to baseline
+    const t = (phase - 0.7) / 0.3;
+    val = peak * wallMotion * 0.27 * (1 - t);
+  }
+  return val;
+}
+
+function computeRadialStrain(phase, peak, wallMotion) {
+  let val;
+  if (phase < 0.08) {
+    val = -phase / 0.08 * 3 * wallMotion;
+  } else if (phase < 0.35) {
+    const t = (phase - 0.08) / 0.27;
+    val = -3 * wallMotion + (peak + 3) * Math.sin(t * Math.PI / 2) * wallMotion;
+  } else if (phase < 0.45) {
+    const t = (phase - 0.35) / 0.1;
+    val = peak * wallMotion * (1 - t * 0.1);
+  } else if (phase < 0.7) {
+    const t = (phase - 0.45) / 0.25;
+    val = peak * wallMotion * 0.9 * (1 - t * 0.7);
+  } else {
+    const t = (phase - 0.7) / 0.3;
+    val = peak * wallMotion * 0.27 * (1 - t);
+  }
+  return val;
+}
+
+// ─── Animation Loop ──────────────────────────────────────────
+let lastTime = 0;
+
+function animate(timestamp) {
+  if (lastTime === 0) lastTime = timestamp;
+  const dt = (timestamp - lastTime) / 1000;
+  lastTime = timestamp;
+
+  if (state.isPlaying) {
+    const cycleDuration = 60 / state.heartRate; // seconds per beat
+    state.time += dt;
+    state.phase = (state.time % cycleDuration) / cycleDuration;
+  }
+
+  drawLV();
+  drawBullsEye();
+  drawStrainCurves();
+  drawECG();
+  updateDisplays();
+
+  state.animFrameId = requestAnimationFrame(animate);
+}
+
+// ─── Update Displays ─────────────────────────────────────────
+function updateDisplays() {
+  const p = PATHOLOGIES[state.pathology];
+  const gls = p.strain.reduce((a, b) => a + b, 0) / 17;
+  const glsEl = document.getElementById('glsValue');
+  glsEl.textContent = gls.toFixed(1) + '%';
+
+  glsEl.classList.remove('abnormal', 'borderline');
+  if (gls > -16) glsEl.classList.add('abnormal');
+  else if (gls > -18) glsEl.classList.add('borderline');
+
+  // Phase indicator
+  const indicator = document.getElementById('phaseIndicator');
+  const isSystole = state.phase >= 0.08 && state.phase < 0.35;
+  indicator.classList.toggle('systole', isSystole);
+  indicator.querySelector('span').textContent = isSystole ? 'Systole' : 'Diastole';
+}
+
+// ─── Draw LV ─────────────────────────────────────────────────
+function drawLV() {
+  const w = lvCanvas._logicalWidth;
+  const h = lvCanvas._logicalHeight;
+  const cx = w / 2;
+  const cy = h / 2 - 5;
+  const p = PATHOLOGIES[state.pathology];
+
+  lvCtx.clearRect(0, 0, w, h);
+
+  // Background grid
+  drawGrid(lvCtx, w, h);
+
+  // Compute contraction factor
+  const contractPhase = getContractionFactor(state.phase);
+
+  // Draw LV walls using Bezier curves
+  const isDCM = state.pathology === 'dcm';
+  const baseScale = isDCM ? 1.3 : 1;
+  const wallThickness = isDCM ? 7 : 10;
+
+  // Determine which segments are visible in current view
+  const viewSegments = getViewSegments(state.view);
+
+  // Draw view-specific surrounding structures FIRST (behind LV)
+  drawSurroundingStructures(lvCtx, cx, cy, baseScale, contractPhase, state.view);
+
+  // --- Outer wall (epicardium) ---
+  drawLVWall(lvCtx, cx, cy, baseScale, wallThickness, contractPhase, p, viewSegments, false);
+
+  // --- Inner wall (endocardium) ---
+  drawLVWall(lvCtx, cx, cy, baseScale, wallThickness, contractPhase, p, viewSegments, true);
+
+  // --- Strain color overlay ---
+  drawStrainOverlay(lvCtx, cx, cy, baseScale, wallThickness, contractPhase, p, viewSegments);
+
+  // --- Mitral valve annulus ---
+  drawMitralValve(lvCtx, cx, cy, baseScale, contractPhase);
+
+  // --- View-specific labels on the walls ---
+  drawWallLabels(lvCtx, cx, cy, baseScale, contractPhase, state.view);
+
+  // View label at bottom
+  lvCtx.font = 'bold 15px Inter';
+  lvCtx.fillStyle = 'rgba(192, 200, 220, 0.8)';
+  lvCtx.textAlign = 'center';
+
+  const viewLabel = { a4c: 'Apical 4-Chamber', a2c: 'Apical 2-Chamber', aplax: 'Apical Long Axis' };
+  lvCtx.fillText(viewLabel[state.view] || '', cx, h - 8);
+}
+
+// ─── Draw Surrounding Structures ─────────────────────────────
+function drawSurroundingStructures(ctx, cx, cy, baseScale, contractPhase, view) {
+  const lvLength = 150 * baseScale;
+  const baseWidth = 70 * baseScale;
+  const longShorten = contractPhase * 0.08;
+  const baseY = cy - lvLength * 0.35 + longShorten * lvLength * 0.5;
+
+  ctx.save();
+
+  if (view === 'a4c') {
+    // ─── A4C: Draw RV (right side), RA, LA ───
+    // Right Ventricle (thinner wall, wider, to the right of septum)
+    const rvOffsetX = baseWidth * 1.05;
+    const rvWidth = baseWidth * 0.65;
+    const rvLength = lvLength * 0.75;
+    const rvBaseY = baseY - 5;
+    const rvApexY = cy + rvLength * 0.4;
+
+    ctx.beginPath();
+    ctx.moveTo(cx + rvOffsetX, rvBaseY);
+    ctx.bezierCurveTo(
+      cx + rvOffsetX + rvWidth * 0.3, rvBaseY + (rvApexY - rvBaseY) * 0.3,
+      cx + rvOffsetX + rvWidth * 0.5, rvApexY - 30,
+      cx + rvOffsetX + rvWidth * 0.15, rvApexY
+    );
+    ctx.bezierCurveTo(
+      cx + rvOffsetX - 5, rvApexY + 5,
+      cx + baseWidth * 0.85, cy + lvLength * 0.3,
+      cx + baseWidth * 0.75, rvBaseY + 10
+    );
+    ctx.strokeStyle = 'rgba(160, 180, 220, 0.3)';
+    ctx.lineWidth = 1.5;
+    ctx.stroke();
+    ctx.fillStyle = 'rgba(20, 30, 55, 0.4)';
+    ctx.fill();
+
+    // RV label
+    ctx.font = 'bold 14px Inter';
+    ctx.fillStyle = 'rgba(160, 180, 220, 0.5)';
+    ctx.textAlign = 'center';
+    ctx.fillText('RV', cx + rvOffsetX + rvWidth * 0.15, cy + 20);
+
+    // Left Atrium (above LV, left side)
+    drawAtrium(ctx, cx - baseWidth * 0.5, baseY - 45, baseWidth * 0.8, 40, 'LA');
+
+    // Right Atrium (above RV, right side)
+    drawAtrium(ctx, cx + rvOffsetX + rvWidth * 0.1, rvBaseY - 40, rvWidth * 0.7, 35, 'RA');
+
+  } else if (view === 'a2c') {
+    // ─── A2C: Only LA above, no RV visible ───
+    // Left Atrium (centered above LV, larger)
+    drawAtrium(ctx, cx, baseY - 50, baseWidth * 1.1, 48, 'LA');
+
+    // Faint outline suggesting chest wall
+    ctx.beginPath();
+    ctx.strokeStyle = 'rgba(120, 140, 170, 0.1)';
+    ctx.lineWidth = 1;
+    ctx.setLineDash([6, 6]);
+    ctx.arc(cx, cy - 60, lvLength * 1.2, Math.PI * 0.15, Math.PI * 0.85);
+    ctx.stroke();
+    ctx.setLineDash([]);
+
+  } else if (view === 'aplax') {
+    // ─── APLAX: LA behind, Aortic root at upper-right ───
+    // Left Atrium (behind/above, slightly left)
+    drawAtrium(ctx, cx - baseWidth * 0.3, baseY - 50, baseWidth * 0.9, 45, 'LA');
+
+    // Aortic root (upper right, tubular structure)
+    const aoX = cx + baseWidth * 0.3;
+    const aoY = baseY - 30;
+    const aoWidth = 22;
+    const aoHeight = 55;
+
+    ctx.beginPath();
+    // Left wall of aorta
+    ctx.moveTo(aoX - aoWidth, aoY);
+    ctx.lineTo(aoX - aoWidth * 0.9, aoY - aoHeight);
+    // Top arch
+    ctx.bezierCurveTo(
+      aoX - aoWidth * 0.5, aoY - aoHeight - 10,
+      aoX + aoWidth * 0.5, aoY - aoHeight - 10,
+      aoX + aoWidth * 0.9, aoY - aoHeight
+    );
+    // Right wall
+    ctx.lineTo(aoX + aoWidth, aoY);
+    ctx.strokeStyle = 'rgba(180, 195, 230, 0.4)';
+    ctx.lineWidth = 2;
+    ctx.stroke();
+    ctx.fillStyle = 'rgba(25, 35, 60, 0.5)';
+    ctx.fill();
+
+    // Aortic valve (at junction)
+    ctx.beginPath();
+    ctx.moveTo(aoX - aoWidth, aoY);
+    ctx.bezierCurveTo(
+      aoX - aoWidth * 0.3, aoY + 6,
+      aoX + aoWidth * 0.3, aoY + 6,
+      aoX + aoWidth, aoY
+    );
+    ctx.strokeStyle = 'rgba(200, 215, 240, 0.5)';
+    ctx.lineWidth = 1.5;
+    ctx.stroke();
+
+    // Ao label
+    ctx.font = 'bold 14px Inter';
+    ctx.fillStyle = 'rgba(180, 195, 230, 0.6)';
+    ctx.textAlign = 'center';
+    ctx.fillText('Ao', aoX, aoY - aoHeight * 0.5);
+  }
+
+  ctx.restore();
+}
+
+function drawAtrium(ctx, cx, cy, width, height, label) {
+  ctx.beginPath();
+  ctx.ellipse(cx, cy, width / 2, height, 0, 0, 2 * Math.PI);
+  ctx.strokeStyle = 'rgba(160, 180, 220, 0.25)';
+  ctx.lineWidth = 1.5;
+  ctx.stroke();
+  ctx.fillStyle = 'rgba(20, 30, 55, 0.35)';
+  ctx.fill();
+
+  ctx.font = 'bold 14px Inter';
+  ctx.fillStyle = 'rgba(160, 180, 220, 0.5)';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillText(label, cx, cy);
+}
+
+// ─── Wall Labels ─────────────────────────────────────────────
+function drawWallLabels(ctx, cx, cy, baseScale, contractPhase, view) {
+  const lvLength = 150 * baseScale;
+  const baseWidth = 70 * baseScale;
+  const labelOffset = baseWidth + 22;
+
+  ctx.font = '13px Inter';
+  ctx.textBaseline = 'middle';
+
+  const labels = {
+    a4c: { left: 'Lateral', right: 'Septal' },
+    a2c: { left: 'Anterior', right: 'Inferior' },
+    aplax: { left: 'Anteroseptal', right: 'Inferolateral' }
+  };
+
+  const { left, right } = labels[view];
+
+  // Left wall label (rotated vertically)
+  ctx.save();
+  ctx.translate(cx - labelOffset, cy + 10);
+  ctx.rotate(-Math.PI / 2);
+  ctx.fillStyle = 'rgba(192, 200, 220, 0.55)';
+  ctx.textAlign = 'center';
+  ctx.fillText(left, 0, 0);
+  ctx.restore();
+
+  // Right wall label (rotated vertically)
+  ctx.save();
+  ctx.translate(cx + labelOffset, cy + 10);
+  ctx.rotate(Math.PI / 2);
+  ctx.fillStyle = 'rgba(192, 200, 220, 0.55)';
+  ctx.textAlign = 'center';
+  ctx.fillText(right, 0, 0);
+  ctx.restore();
+}
+
+function drawGrid(ctx, w, h) {
+  ctx.strokeStyle = 'rgba(255, 255, 255, 0.03)';
+  ctx.lineWidth = 0.5;
+  for (let x = 0; x < w; x += 20) {
+    ctx.beginPath();
+    ctx.moveTo(x, 0);
+    ctx.lineTo(x, h);
+    ctx.stroke();
+  }
+  for (let y = 0; y < h; y += 20) {
+    ctx.beginPath();
+    ctx.moveTo(0, y);
+    ctx.lineTo(w, y);
+    ctx.stroke();
+  }
+}
+
+function getContractionFactor(phase) {
+  if (phase < 0.08) {
+    return phase / 0.08 * 0.1;
+  } else if (phase < 0.35) {
+    const t = (phase - 0.08) / 0.27;
+    return 0.1 + 0.9 * Math.sin(t * Math.PI / 2);
+  } else if (phase < 0.45) {
+    const t = (phase - 0.35) / 0.1;
+    return 1 - t * 0.15;
+  } else if (phase < 0.7) {
+    const t = (phase - 0.45) / 0.25;
+    return 0.85 * (1 - t * 0.6);
+  } else {
+    const t = (phase - 0.7) / 0.3;
+    return 0.34 * (1 - t);
+  }
+}
+
+function getViewSegments(view) {
+  // Return pairs of [leftSeg, rightSeg] for basal, mid, apical
+  switch (view) {
+    case 'a4c':
+      return {
+        basal: [5, 3],    // anterolateral, inferoseptal
+        mid: [11, 9],     // mid anterolateral, mid inferoseptal
+        apical: [15, 13], // apical lateral, apical septal
+        apex: 16
+      };
+    case 'a2c':
+      return {
+        basal: [0, 4],    // anterior, inferior
+        mid: [6, 10],     // mid anterior, mid inferior
+        apical: [12, 14], // apical anterior, apical inferior
+        apex: 16
+      };
+    case 'aplax':
+      return {
+        basal: [1, 5],    // anteroseptal, inferolateral
+        mid: [7, 11],     // mid anteroseptal, mid inferolateral
+        apical: [13, 15], // apical septal, apical lateral
+        apex: 16
+      };
+  }
+}
+
+function drawLVWall(ctx, cx, cy, baseScale, wallThickness, contractPhase, pathData, viewSegs, isInner) {
+  const w = lvCanvas._logicalWidth;
+  const h = lvCanvas._logicalHeight;
+
+  // LV dimensions
+  const baseWidth = 70 * baseScale;
+  const midWidth = 55 * baseScale;
+  const apicalWidth = 30 * baseScale;
+  const lvLength = 150 * baseScale;
+
+  const offset = isInner ? wallThickness : 0;
+
+  // Get contraction per segment level
+  const basalContractL = contractPhase * pathData.wallMotion[viewSegs.basal[0]] * 0.12;
+  const basalContractR = contractPhase * pathData.wallMotion[viewSegs.basal[1]] * 0.12;
+  const midContractL = contractPhase * pathData.wallMotion[viewSegs.mid[0]] * 0.14;
+  const midContractR = contractPhase * pathData.wallMotion[viewSegs.mid[1]] * 0.14;
+  const apicalContractL = contractPhase * pathData.wallMotion[viewSegs.apical[0]] * 0.16;
+  const apicalContractR = contractPhase * pathData.wallMotion[viewSegs.apical[1]] * 0.16;
+  const apexContract = contractPhase * pathData.wallMotion[viewSegs.apex] * 0.18;
+
+  // Longitudinal shortening
+  const longShorten = contractPhase * 0.08;
+
+  // Points
+  const baseY = cy - lvLength * 0.35 + longShorten * lvLength * 0.5;
+  const midY = cy + lvLength * 0.1;
+  const apicalY = cy + lvLength * 0.45;
+  const apexY = cy + lvLength * 0.65 * (1 - longShorten);
+
+  // Left wall
+  const bwL = (baseWidth - offset) * (1 - basalContractL);
+  const mwL = (midWidth - offset * 0.8) * (1 - midContractL);
+  const awL = (apicalWidth - offset * 0.5) * (1 - apicalContractL);
+  const apexW = (isInner ? 3 : 8) * (1 - apexContract);
+
+  // Right wall
+  const bwR = (baseWidth - offset) * (1 - basalContractR);
+  const mwR = (midWidth - offset * 0.8) * (1 - midContractR);
+  const awR = (apicalWidth - offset * 0.5) * (1 - apicalContractR);
+
+  ctx.beginPath();
+
+  // Left side (from base down to apex)
+  ctx.moveTo(cx - bwL, baseY);
+  ctx.bezierCurveTo(
+    cx - bwL * 1.02, baseY + (midY - baseY) * 0.5,
+    cx - mwL * 1.1, midY - (midY - baseY) * 0.2,
+    cx - mwL, midY
+  );
+  ctx.bezierCurveTo(
+    cx - mwL * 0.95, midY + (apicalY - midY) * 0.4,
+    cx - awL * 1.2, apicalY - (apicalY - midY) * 0.2,
+    cx - awL, apicalY
+  );
+  ctx.bezierCurveTo(
+    cx - awL * 0.7, apicalY + (apexY - apicalY) * 0.5,
+    cx - apexW, apexY - 10,
+    cx, apexY
+  );
+
+  // Right side (from apex back up to base)
+  ctx.bezierCurveTo(
+    cx + apexW, apexY - 10,
+    cx + awR * 0.7, apicalY + (apexY - apicalY) * 0.5,
+    cx + awR, apicalY
+  );
+  ctx.bezierCurveTo(
+    cx + awR * 1.2, apicalY - (apicalY - midY) * 0.2,
+    cx + mwR * 0.95, midY + (apicalY - midY) * 0.4,
+    cx + mwR, midY
+  );
+  ctx.bezierCurveTo(
+    cx + mwR * 1.1, midY - (midY - baseY) * 0.2,
+    cx + bwR * 1.02, baseY + (midY - baseY) * 0.5,
+    cx + bwR, baseY
+  );
+
+  if (isInner) {
+    ctx.strokeStyle = 'rgba(200, 210, 230, 0.35)';
+    ctx.lineWidth = 1;
+    ctx.stroke();
+    ctx.fillStyle = 'rgba(10, 14, 26, 0.7)';
+    ctx.fill();
+  } else {
+    ctx.strokeStyle = 'rgba(200, 210, 230, 0.6)';
+    ctx.lineWidth = 2;
+    ctx.stroke();
+  }
+}
+
+function drawStrainOverlay(ctx, cx, cy, baseScale, wallThickness, contractPhase, pathData, viewSegs) {
+  const lvLength = 150 * baseScale;
+  const baseWidth = 70 * baseScale;
+  const midWidth = 55 * baseScale;
+  const apicalWidth = 30 * baseScale;
+  const longShorten = contractPhase * 0.08;
+
+  const baseY = cy - lvLength * 0.35 + longShorten * lvLength * 0.5;
+  const midY = cy + lvLength * 0.1;
+  const apicalY = cy + lvLength * 0.45;
+  const apexY = cy + lvLength * 0.65 * (1 - longShorten);
+
+  // Draw colored segments on the wall
+  const segments = [
+    { seg: viewSegs.basal[0], side: 'left', y1: baseY, y2: midY, w1: baseWidth, w2: midWidth },
+    { seg: viewSegs.basal[1], side: 'right', y1: baseY, y2: midY, w1: baseWidth, w2: midWidth },
+    { seg: viewSegs.mid[0], side: 'left', y1: midY, y2: apicalY, w1: midWidth, w2: apicalWidth },
+    { seg: viewSegs.mid[1], side: 'right', y1: midY, y2: apicalY, w1: midWidth, w2: apicalWidth },
+    { seg: viewSegs.apical[0], side: 'left', y1: apicalY, y2: apexY, w1: apicalWidth, w2: 8 },
+    { seg: viewSegs.apical[1], side: 'right', y1: apicalY, y2: apexY, w1: apicalWidth, w2: 8 }
+  ];
+
+  segments.forEach(({ seg, side, y1, y2, w1, w2 }) => {
+    const strain = pathData.strain[seg];
+    const color = strainToColor(strain);
+    const contract = contractPhase * pathData.wallMotion[seg];
+    const contraction = contract * 0.14;
+
+    const ow1 = w1 * (1 - contraction);
+    const ow2 = w2 * (1 - contraction);
+    const iw1 = (w1 - wallThickness) * (1 - contraction);
+    const iw2 = (w2 - wallThickness * 0.5) * (1 - contraction);
+
+    const sign = side === 'left' ? -1 : 1;
+
+    ctx.beginPath();
+    ctx.moveTo(cx + sign * iw1, y1);
+    ctx.lineTo(cx + sign * ow1, y1);
+    ctx.bezierCurveTo(
+      cx + sign * ow1 * 1.02, (y1 + y2) / 2,
+      cx + sign * ow2 * 1.05, (y1 + y2) / 2,
+      cx + sign * ow2, y2
+    );
+    ctx.lineTo(cx + sign * iw2, y2);
+    ctx.bezierCurveTo(
+      cx + sign * iw2 * 1.05, (y1 + y2) / 2,
+      cx + sign * iw1 * 1.02, (y1 + y2) / 2,
+      cx + sign * iw1, y1
+    );
+    ctx.closePath();
+
+    ctx.fillStyle = color;
+    ctx.globalAlpha = 0.4 + contractPhase * 0.15;
+    ctx.fill();
+    ctx.globalAlpha = 1;
+
+    // Segment label
+    const labelY = (y1 + y2) / 2;
+    const labelX = cx + sign * ((ow1 + iw1) / 2 + (ow2 + iw2) / 2) / 2;
+    ctx.font = 'bold 14px Inter';
+    ctx.fillStyle = 'rgba(255,255,255,0.85)';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.shadowColor = 'rgba(0,0,0,0.7)';
+    ctx.shadowBlur = 3;
+    ctx.fillText(strain.toFixed(0) + '%', labelX, labelY);
+    ctx.shadowBlur = 0;
+  });
+}
+
+function drawMitralValve(ctx, cx, cy, baseScale, contractPhase) {
+  const lvLength = 150 * baseScale;
+  const baseWidth = 70 * baseScale;
+  const baseY = cy - lvLength * 0.35 + contractPhase * 0.08 * lvLength * 0.5;
+
+  const openness = state.phase > 0.45 ? Math.min(1, (state.phase - 0.45) * 5) : 0;
+
+  ctx.beginPath();
+  ctx.moveTo(cx - baseWidth, baseY);
+
+  if (openness > 0.1) {
+    // Valve open (diastole)
+    ctx.bezierCurveTo(
+      cx - baseWidth * 0.5, baseY - 15 * openness,
+      cx - 10, baseY - 20 * openness,
+      cx, baseY - 5 * openness
+    );
+    ctx.bezierCurveTo(
+      cx + 10, baseY - 20 * openness,
+      cx + baseWidth * 0.5, baseY - 15 * openness,
+      cx + baseWidth, baseY
+    );
+  } else {
+    // Valve closed (systole)
+    ctx.bezierCurveTo(
+      cx - baseWidth * 0.3, baseY + 5,
+      cx - 10, baseY + 3,
+      cx, baseY + 2
+    );
+    ctx.bezierCurveTo(
+      cx + 10, baseY + 3,
+      cx + baseWidth * 0.3, baseY + 5,
+      cx + baseWidth, baseY
+    );
+  }
+
+  ctx.strokeStyle = 'rgba(200, 215, 240, 0.7)';
+  ctx.lineWidth = 2;
+  ctx.stroke();
+}
+
+function drawGrid(ctx, w, h) {
+  ctx.strokeStyle = 'rgba(255, 255, 255, 0.03)';
+  ctx.lineWidth = 0.5;
+  for (let x = 0; x < w; x += 20) {
+    ctx.beginPath();
+    ctx.moveTo(x, 0);
+    ctx.lineTo(x, h);
+    ctx.stroke();
+  }
+  for (let y = 0; y < h; y += 20) {
+    ctx.beginPath();
+    ctx.moveTo(0, y);
+    ctx.lineTo(w, y);
+    ctx.stroke();
+  }
+}
+
+function getContractionFactor(phase) {
+  if (phase < 0.08) {
+    return phase / 0.08 * 0.1;
+  } else if (phase < 0.35) {
+    const t = (phase - 0.08) / 0.27;
+    return 0.1 + 0.9 * Math.sin(t * Math.PI / 2);
+  } else if (phase < 0.45) {
+    const t = (phase - 0.35) / 0.1;
+    return 1 - t * 0.15;
+  } else if (phase < 0.7) {
+    const t = (phase - 0.45) / 0.25;
+    return 0.85 * (1 - t * 0.6);
+  } else {
+    const t = (phase - 0.7) / 0.3;
+    return 0.34 * (1 - t);
+  }
+}
+
+function getViewSegments(view) {
+  // Return pairs of [leftSeg, rightSeg] for basal, mid, apical
+  switch (view) {
+    case 'a4c':
+      return {
+        basal: [5, 3],    // anterolateral, inferoseptal
+        mid: [11, 9],     // mid anterolateral, mid inferoseptal
+        apical: [15, 13], // apical inferior→lateral, apical anterior→septal
+        apex: 16          // apex
+      };
+    case 'a2c':
+      return {
+        basal: [0, 4],
+        mid: [6, 10],
+        apical: [12, 14],
+        apex: 16
+      };
+    case 'aplax':
+      return {
+        basal: [1, 5],
+        mid: [7, 11],
+        apical: [13, 15],
+        apex: 16
+      };
+  }
+}
+
+function drawLVWall(ctx, cx, cy, baseScale, wallThickness, contractPhase, pathData, viewSegs, isInner) {
+  const w = lvCanvas._logicalWidth;
+  const h = lvCanvas._logicalHeight;
+
+  // LV dimensions
+  const baseWidth = 70 * baseScale;
+  const midWidth = 55 * baseScale;
+  const apicalWidth = 30 * baseScale;
+  const lvLength = 150 * baseScale;
+
+  const offset = isInner ? wallThickness : 0;
+  const sign = isInner ? 1 : -1;
+
+  // Get contraction per segment level
+  const basalContractL = contractPhase * pathData.wallMotion[viewSegs.basal[0]] * 0.12;
+  const basalContractR = contractPhase * pathData.wallMotion[viewSegs.basal[1]] * 0.12;
+  const midContractL = contractPhase * pathData.wallMotion[viewSegs.mid[0]] * 0.14;
+  const midContractR = contractPhase * pathData.wallMotion[viewSegs.mid[1]] * 0.14;
+  const apicalContractL = contractPhase * pathData.wallMotion[viewSegs.apical[0]] * 0.16;
+  const apicalContractR = contractPhase * pathData.wallMotion[viewSegs.apical[1]] * 0.16;
+  const apexContract = contractPhase * pathData.wallMotion[viewSegs.apex] * 0.18;
+
+  // Longitudinal shortening
+  const longShorten = contractPhase * 0.08;
+
+  // Points
+  const baseY = cy - lvLength * 0.35 + longShorten * lvLength * 0.5;
+  const midY = cy + lvLength * 0.1;
+  const apicalY = cy + lvLength * 0.45;
+  const apexY = cy + lvLength * 0.65 * (1 - longShorten);
+
+  // Left wall
+  const bwL = (baseWidth - offset) * (1 - basalContractL);
+  const mwL = (midWidth - offset * 0.8) * (1 - midContractL);
+  const awL = (apicalWidth - offset * 0.5) * (1 - apicalContractL);
+  const apexW = (isInner ? 3 : 8) * (1 - apexContract);
+
+  // Right wall
+  const bwR = (baseWidth - offset) * (1 - basalContractR);
+  const mwR = (midWidth - offset * 0.8) * (1 - midContractR);
+  const awR = (apicalWidth - offset * 0.5) * (1 - apicalContractR);
+
+  ctx.beginPath();
+
+  // Left side (from base down to apex)
+  ctx.moveTo(cx - bwL, baseY);
+  ctx.bezierCurveTo(
+    cx - bwL * 1.02, baseY + (midY - baseY) * 0.5,
+    cx - mwL * 1.1, midY - (midY - baseY) * 0.2,
+    cx - mwL, midY
+  );
+  ctx.bezierCurveTo(
+    cx - mwL * 0.95, midY + (apicalY - midY) * 0.4,
+    cx - awL * 1.2, apicalY - (apicalY - midY) * 0.2,
+    cx - awL, apicalY
+  );
+  ctx.bezierCurveTo(
+    cx - awL * 0.7, apicalY + (apexY - apicalY) * 0.5,
+    cx - apexW, apexY - 10,
+    cx, apexY
+  );
+
+  // Right side (from apex back up to base)
+  ctx.bezierCurveTo(
+    cx + apexW, apexY - 10,
+    cx + awR * 0.7, apicalY + (apexY - apicalY) * 0.5,
+    cx + awR, apicalY
+  );
+  ctx.bezierCurveTo(
+    cx + awR * 1.2, apicalY - (apicalY - midY) * 0.2,
+    cx + mwR * 0.95, midY + (apicalY - midY) * 0.4,
+    cx + mwR, midY
+  );
+  ctx.bezierCurveTo(
+    cx + mwR * 1.1, midY - (midY - baseY) * 0.2,
+    cx + bwR * 1.02, baseY + (midY - baseY) * 0.5,
+    cx + bwR, baseY
+  );
+
+  if (isInner) {
+    ctx.strokeStyle = 'rgba(200, 210, 230, 0.25)';
+    ctx.lineWidth = 1;
+    ctx.stroke();
+    ctx.fillStyle = 'rgba(10, 14, 26, 0.7)';
+    ctx.fill();
+  } else {
+    ctx.strokeStyle = 'rgba(200, 210, 230, 0.5)';
+    ctx.lineWidth = 1.5;
+    ctx.stroke();
+  }
+}
+
+function drawStrainOverlay(ctx, cx, cy, baseScale, wallThickness, contractPhase, pathData, viewSegs) {
+  const lvLength = 150 * baseScale;
+  const baseWidth = 70 * baseScale;
+  const midWidth = 55 * baseScale;
+  const apicalWidth = 30 * baseScale;
+  const longShorten = contractPhase * 0.08;
+
+  const baseY = cy - lvLength * 0.35 + longShorten * lvLength * 0.5;
+  const midY = cy + lvLength * 0.1;
+  const apicalY = cy + lvLength * 0.45;
+  const apexY = cy + lvLength * 0.65 * (1 - longShorten);
+
+  // Draw colored segments on the wall
+  const segments = [
+    { seg: viewSegs.basal[0], side: 'left', y1: baseY, y2: midY, w1: baseWidth, w2: midWidth },
+    { seg: viewSegs.basal[1], side: 'right', y1: baseY, y2: midY, w1: baseWidth, w2: midWidth },
+    { seg: viewSegs.mid[0], side: 'left', y1: midY, y2: apicalY, w1: midWidth, w2: apicalWidth },
+    { seg: viewSegs.mid[1], side: 'right', y1: midY, y2: apicalY, w1: midWidth, w2: apicalWidth },
+    { seg: viewSegs.apical[0], side: 'left', y1: apicalY, y2: apexY, w1: apicalWidth, w2: 8 },
+    { seg: viewSegs.apical[1], side: 'right', y1: apicalY, y2: apexY, w1: apicalWidth, w2: 8 }
+  ];
+
+  segments.forEach(({ seg, side, y1, y2, w1, w2 }) => {
+    const strain = pathData.strain[seg];
+    const color = strainToColor(strain);
+    const contract = contractPhase * pathData.wallMotion[seg];
+    const contraction = contract * 0.14;
+
+    const ow1 = w1 * (1 - contraction);
+    const ow2 = w2 * (1 - contraction);
+    const iw1 = (w1 - wallThickness) * (1 - contraction);
+    const iw2 = (w2 - wallThickness * 0.5) * (1 - contraction);
+
+    const sign = side === 'left' ? -1 : 1;
+
+    ctx.beginPath();
+    ctx.moveTo(cx + sign * iw1, y1);
+    ctx.lineTo(cx + sign * ow1, y1);
+    ctx.bezierCurveTo(
+      cx + sign * ow1 * 1.02, (y1 + y2) / 2,
+      cx + sign * ow2 * 1.05, (y1 + y2) / 2,
+      cx + sign * ow2, y2
+    );
+    ctx.lineTo(cx + sign * iw2, y2);
+    ctx.bezierCurveTo(
+      cx + sign * iw2 * 1.05, (y1 + y2) / 2,
+      cx + sign * iw1 * 1.02, (y1 + y2) / 2,
+      cx + sign * iw1, y1
+    );
+    ctx.closePath();
+
+    ctx.fillStyle = color;
+    ctx.globalAlpha = 0.35 + contractPhase * 0.15;
+    ctx.fill();
+    ctx.globalAlpha = 1;
+
+    // Segment label
+    const labelY = (y1 + y2) / 2;
+    const labelX = cx + sign * ((ow1 + iw1) / 2 + (ow2 + iw2) / 2) / 2;
+    ctx.font = 'bold 12px Inter';
+    ctx.fillStyle = 'rgba(255,255,255,0.7)';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(strain.toFixed(0) + '%', labelX, labelY);
+  });
+}
+
+function drawMitralValve(ctx, cx, cy, baseScale, contractPhase) {
+  const lvLength = 150 * baseScale;
+  const baseWidth = 70 * baseScale;
+  const baseY = cy - lvLength * 0.35 + contractPhase * 0.08 * lvLength * 0.5;
+
+  const openness = state.phase > 0.45 ? Math.min(1, (state.phase - 0.45) * 5) : 0;
+
+  ctx.beginPath();
+  ctx.moveTo(cx - baseWidth, baseY);
+
+  if (openness > 0.1) {
+    // Valve open (diastole)
+    ctx.bezierCurveTo(
+      cx - baseWidth * 0.5, baseY - 15 * openness,
+      cx - 10, baseY - 20 * openness,
+      cx, baseY - 5 * openness
+    );
+    ctx.bezierCurveTo(
+      cx + 10, baseY - 20 * openness,
+      cx + baseWidth * 0.5, baseY - 15 * openness,
+      cx + baseWidth, baseY
+    );
+  } else {
+    // Valve closed (systole)
+    ctx.bezierCurveTo(
+      cx - baseWidth * 0.3, baseY + 5,
+      cx - 10, baseY + 3,
+      cx, baseY + 2
+    );
+    ctx.bezierCurveTo(
+      cx + 10, baseY + 3,
+      cx + baseWidth * 0.3, baseY + 5,
+      cx + baseWidth, baseY
+    );
+  }
+
+  ctx.strokeStyle = 'rgba(200, 215, 240, 0.6)';
+  ctx.lineWidth = 2;
+  ctx.stroke();
+}
+
+// ─── Draw Bull's Eye Plot ────────────────────────────────────
+function drawBullsEye() {
+  const w = bullseyeCanvas._logicalWidth;
+  const h = bullseyeCanvas._logicalHeight;
+  const cx = w / 2;
+  const cy = h / 2;
+  const p = PATHOLOGIES[state.pathology];
+
+  bullseyeCtx.clearRect(0, 0, w, h);
+
+  const maxR = Math.min(w, h) / 2 - 20;
+
+  // Ring radii
+  const rings = [
+    { inner: maxR * 0.6, outer: maxR, count: 6, startSeg: 0 },      // Basal
+    { inner: maxR * 0.32, outer: maxR * 0.6, count: 6, startSeg: 6 }, // Mid
+    { inner: maxR * 0.12, outer: maxR * 0.32, count: 4, startSeg: 12 }, // Apical
+    { inner: 0, outer: maxR * 0.12, count: 1, startSeg: 16 }          // Apex
+  ];
+
+  // AHA segment angular offsets (starting from anterior, going clockwise)
+  const baseAngles = [
+    -Math.PI / 2,                 // Anterior (12 o'clock)
+    -Math.PI / 2 + Math.PI / 3,  // Anteroseptal
+    -Math.PI / 2 + 2 * Math.PI / 3, // Inferoseptal
+    Math.PI / 2,                  // Inferior
+    Math.PI / 2 + Math.PI / 3,   // Inferolateral
+    Math.PI / 2 + 2 * Math.PI / 3  // Anterolateral
+  ];
+
+  rings.forEach((ring, ri) => {
+    const segAngle = (2 * Math.PI) / ring.count;
+
+    for (let i = 0; i < ring.count; i++) {
+      const segIdx = ring.startSeg + i;
+      const strain = p.strain[segIdx];
+      const color = strainToColor(strain);
+
+      let startAngle, endAngle;
+      if (ring.count === 6) {
+        startAngle = baseAngles[i] - segAngle / 2;
+        endAngle = baseAngles[i] + segAngle / 2;
+      } else if (ring.count === 4) {
+        const apicalAngles = [-Math.PI / 2, 0, Math.PI / 2, Math.PI];
+        startAngle = apicalAngles[i] - Math.PI / 4;
+        endAngle = apicalAngles[i] + Math.PI / 4;
+      } else {
+        startAngle = 0;
+        endAngle = 2 * Math.PI;
+      }
+
+      // Draw segment
+      bullseyeCtx.beginPath();
+      if (ring.inner > 0) {
+        bullseyeCtx.arc(cx, cy, ring.outer, startAngle, endAngle);
+        bullseyeCtx.arc(cx, cy, ring.inner, endAngle, startAngle, true);
+      } else {
+        bullseyeCtx.arc(cx, cy, ring.outer, startAngle, endAngle);
+        bullseyeCtx.lineTo(cx, cy);
+      }
+      bullseyeCtx.closePath();
+
+      bullseyeCtx.fillStyle = color;
+      bullseyeCtx.globalAlpha = 0.85;
+      bullseyeCtx.fill();
+      bullseyeCtx.globalAlpha = 1;
+
+      // Highlight hovered segment
+      if (state.hoveredSegment === segIdx) {
+        bullseyeCtx.strokeStyle = '#ffffff';
+        bullseyeCtx.lineWidth = 2.5;
+        bullseyeCtx.stroke();
+      }
+
+      // Segment borders
+      bullseyeCtx.strokeStyle = 'rgba(10, 14, 26, 0.6)';
+      bullseyeCtx.lineWidth = 1.5;
+      bullseyeCtx.stroke();
+
+      // Strain value text
+      const midR = (ring.inner + ring.outer) / 2;
+      const midA = (startAngle + endAngle) / 2;
+      const tx = cx + midR * Math.cos(midA);
+      const ty = cy + midR * Math.sin(midA);
+
+      bullseyeCtx.font = 'bold 15px Inter';
+      bullseyeCtx.fillStyle = '#ffffff';
+      bullseyeCtx.textAlign = 'center';
+      bullseyeCtx.textBaseline = 'middle';
+      bullseyeCtx.shadowColor = 'rgba(0,0,0,0.8)';
+      bullseyeCtx.shadowBlur = 4;
+      bullseyeCtx.fillText(strain.toFixed(0), tx, ty);
+      bullseyeCtx.shadowBlur = 0;
+    }
+  });
+
+  // Ring labels
+  bullseyeCtx.font = 'bold 13px Inter';
+  bullseyeCtx.fillStyle = 'rgba(192, 200, 220, 0.7)';
+  bullseyeCtx.textAlign = 'left';
+  bullseyeCtx.fillText('Basal', cx + maxR + 4, cy);
+  bullseyeCtx.fillText('Mid', cx + maxR * 0.6 + 4, cy - 12);
+  bullseyeCtx.fillText('Apical', cx + maxR * 0.32 + 4, cy - 24);
+
+  // Direction labels
+  bullseyeCtx.font = 'bold 14px Inter';
+  bullseyeCtx.fillStyle = 'rgba(192, 200, 220, 0.65)';
+  bullseyeCtx.textAlign = 'center';
+  bullseyeCtx.fillText('ANT', cx, cy - maxR - 8);
+  bullseyeCtx.fillText('INF', cx, cy + maxR + 14);
+  bullseyeCtx.textAlign = 'right';
+  bullseyeCtx.fillText('SEPT', cx - maxR - 6, cy + 4);
+  bullseyeCtx.textAlign = 'left';
+  bullseyeCtx.fillText('LAT', cx + maxR + 6, cy + 4);
+}
+
+function handleBullseyeHover(e) {
+  const rect = bullseyeCanvas.getBoundingClientRect();
+  const x = e.clientX - rect.left;
+  const y = e.clientY - rect.top;
+  const w = bullseyeCanvas._logicalWidth;
+  const h = bullseyeCanvas._logicalHeight;
+  const cx = w / 2;
+  const cy = h / 2;
+  const maxR = Math.min(w, h) / 2 - 20;
+
+  const dx = x - cx;
+  const dy = y - cy;
+  const dist = Math.sqrt(dx * dx + dy * dy);
+  const angle = Math.atan2(dy, dx);
+
+  let segIdx = -1;
+
+  if (dist <= maxR * 0.12) {
+    segIdx = 16; // Apex
+  } else if (dist <= maxR * 0.32) {
+    // Apical (4 segments)
+    const apicalAngles = [-Math.PI / 2, 0, Math.PI / 2, Math.PI];
+    for (let i = 0; i < 4; i++) {
+      let start = apicalAngles[i] - Math.PI / 4;
+      let end = apicalAngles[i] + Math.PI / 4;
+      if (angleInRange(angle, start, end)) {
+        segIdx = 12 + i;
+        break;
+      }
+    }
+  } else if (dist <= maxR * 0.6) {
+    // Mid (6 segments)
+    segIdx = 6 + getHexSegment(angle);
+  } else if (dist <= maxR) {
+    // Basal (6 segments)
+    segIdx = getHexSegment(angle);
+  }
+
+  state.hoveredSegment = segIdx;
+
+  if (segIdx >= 0 && segIdx < 17) {
+    const p = PATHOLOGIES[state.pathology];
+    document.getElementById('segmentInfo').querySelector('.seg-name').textContent = SEGMENT_NAMES[segIdx];
+    const strainVal = p.strain[segIdx];
+    const valEl = document.getElementById('segmentInfo').querySelector('.seg-value');
+    valEl.textContent = strainVal.toFixed(1) + '%';
+    valEl.style.color = strainToColor(strainVal);
+  }
+}
+
+function getHexSegment(angle) {
+  // 6 segments, starting from anterior (-PI/2), each PI/3
+  const baseAngles = [
+    -Math.PI / 2,
+    -Math.PI / 2 + Math.PI / 3,
+    -Math.PI / 2 + 2 * Math.PI / 3,
+    Math.PI / 2,
+    Math.PI / 2 + Math.PI / 3,
+    Math.PI / 2 + 2 * Math.PI / 3
+  ];
+
+  for (let i = 0; i < 6; i++) {
+    const start = baseAngles[i] - Math.PI / 6;
+    const end = baseAngles[i] + Math.PI / 6;
+    if (angleInRange(angle, start, end)) return i;
+  }
+  return 0;
+}
+
+function angleInRange(angle, start, end) {
+  // Normalize to [-PI, PI]
+  const norm = (a) => {
+    while (a > Math.PI) a -= 2 * Math.PI;
+    while (a < -Math.PI) a += 2 * Math.PI;
+    return a;
+  };
+  const a = norm(angle);
+  const s = norm(start);
+  const e = norm(end);
+
+  if (s <= e) return a >= s && a <= e;
+  return a >= s || a <= e;
+}
+
+// ─── Draw Strain Curves ──────────────────────────────────────
+const CURVE_COLORS = [
+  '#ef4444', '#f97316', '#fbbf24', '#34d399',
+  '#38bdf8', '#6366f1', '#a78bfa', '#f472b6',
+  '#22d3ee', '#84cc16', '#e879f9', '#fb923c',
+  '#2dd4bf', '#818cf8', '#c084fc', '#fb7185',
+  '#facc15'
+];
+
+function drawStrainCurves() {
+  const w = curvesCanvas._logicalWidth;
+  const h = curvesCanvas._logicalHeight;
+  const p = PATHOLOGIES[state.pathology];
+
+  curvesCtx.clearRect(0, 0, w, h);
+
+  const margin = { top: 20, right: 20, bottom: 30, left: 45 };
+  const plotW = w - margin.left - margin.right;
+  const plotH = h - margin.top - margin.bottom;
+
+  // Determine Y range
+  let minY, maxY;
+  if (state.curveType === 'radial') {
+    minY = -10;
+    maxY = 60;
+  } else {
+    minY = -30;
+    maxY = 15;
+  }
+
+  // Grid & axes
+  curvesCtx.strokeStyle = 'rgba(255, 255, 255, 0.06)';
+  curvesCtx.lineWidth = 0.5;
+
+  // Horizontal grid lines
+  for (let v = minY; v <= maxY; v += 5) {
+    const y = margin.top + plotH * (1 - (v - minY) / (maxY - minY));
+    curvesCtx.beginPath();
+    curvesCtx.moveTo(margin.left, y);
+    curvesCtx.lineTo(margin.left + plotW, y);
+    curvesCtx.stroke();
+
+    if (v % 10 === 0) {
+      curvesCtx.font = '13px Inter';
+      curvesCtx.fillStyle = 'rgba(192, 200, 220, 0.7)';
+      curvesCtx.textAlign = 'right';
+      curvesCtx.fillText(v + '%', margin.left - 6, y + 4);
+    }
+  }
+
+  // Zero line
+  const zeroY = margin.top + plotH * (1 - (0 - minY) / (maxY - minY));
+  curvesCtx.strokeStyle = 'rgba(255, 255, 255, 0.15)';
+  curvesCtx.lineWidth = 1;
+  curvesCtx.setLineDash([4, 4]);
+  curvesCtx.beginPath();
+  curvesCtx.moveTo(margin.left, zeroY);
+  curvesCtx.lineTo(margin.left + plotW, zeroY);
+  curvesCtx.stroke();
+  curvesCtx.setLineDash([]);
+
+  // X axis labels
+  curvesCtx.font = 'bold 13px Inter';
+  curvesCtx.fillStyle = 'rgba(192, 200, 220, 0.7)';
+  curvesCtx.textAlign = 'center';
+  const xLabels = ['AVC', 'MVO', 'MVC'];
+  const xPositions = [0.35, 0.45, 0.08]; // Approximate timing
+  xLabels.forEach((label, i) => {
+    const x = margin.left + plotW * xPositions[i];
+    curvesCtx.fillText(label, x, margin.top + plotH + 18);
+    curvesCtx.strokeStyle = 'rgba(136, 146, 168, 0.2)';
+    curvesCtx.lineWidth = 0.5;
+    curvesCtx.setLineDash([3, 3]);
+    curvesCtx.beginPath();
+    curvesCtx.moveTo(x, margin.top);
+    curvesCtx.lineTo(x, margin.top + plotH);
+    curvesCtx.stroke();
+    curvesCtx.setLineDash([]);
+  });
+
+  // Draw each segment curve
+  for (let seg = 0; seg < 17; seg++) {
+    const curve = state.strainCurveData[seg];
+    if (!curve) continue;
+
+    curvesCtx.beginPath();
+    curvesCtx.strokeStyle = CURVE_COLORS[seg];
+    curvesCtx.lineWidth = state.hoveredSegment === seg ? 3.5 : 1.5;
+    curvesCtx.globalAlpha = state.hoveredSegment === seg ? 1 :
+                            state.hoveredSegment >= 0 ? 0.15 : 0.6;
+
+    for (let t = 0; t <= 100; t++) {
+      const x = margin.left + (t / 100) * plotW;
+      const y = margin.top + plotH * (1 - (curve[t] - minY) / (maxY - minY));
+      if (t === 0) curvesCtx.moveTo(x, y);
+      else curvesCtx.lineTo(x, y);
+    }
+    curvesCtx.stroke();
+    curvesCtx.globalAlpha = 1;
+  }
+
+  // Current time indicator
+  const timeX = margin.left + state.phase * plotW;
+  curvesCtx.strokeStyle = 'rgba(255, 255, 255, 0.5)';
+  curvesCtx.lineWidth = 1.5;
+  curvesCtx.beginPath();
+  curvesCtx.moveTo(timeX, margin.top);
+  curvesCtx.lineTo(timeX, margin.top + plotH);
+  curvesCtx.stroke();
+
+  // Title
+  curvesCtx.font = 'bold 14px Inter';
+  curvesCtx.fillStyle = 'rgba(192, 200, 220, 0.7)';
+  curvesCtx.textAlign = 'left';
+  const titles = { longitudinal: 'Longitudinal Strain (%)', circumferential: 'Circumferential Strain (%)', radial: 'Radial Strain (%)' };
+  curvesCtx.fillText(titles[state.curveType], margin.left, margin.top - 6);
+}
+
+function updateLegend() {
+  const legend = document.getElementById('curvesLegend');
+  legend.innerHTML = '';
+
+  // Show only a few representative segments
+  const showSegs = [0, 3, 6, 9, 12, 15, 16];
+  showSegs.forEach(seg => {
+    const div = document.createElement('div');
+    div.className = 'legend-item';
+
+    const dot = document.createElement('span');
+    dot.className = 'legend-dot';
+    dot.style.background = CURVE_COLORS[seg];
+
+    const label = document.createElement('span');
+    label.textContent = SEGMENT_NAMES[seg].replace('Basal ', 'B-').replace('Mid ', 'M-').replace('Apical ', 'A-');
+
+    div.appendChild(dot);
+    div.appendChild(label);
+    legend.appendChild(div);
+
+    div.addEventListener('mouseenter', () => { state.hoveredSegment = seg; });
+    div.addEventListener('mouseleave', () => { state.hoveredSegment = -1; });
+  });
+}
+
+// ─── Draw ECG Strip ──────────────────────────────────────────
+function drawECG() {
+  const w = ecgCanvas._logicalWidth;
+  const h = ecgCanvas._logicalHeight;
+
+  ecgCtx.clearRect(0, 0, w, h);
+
+  // Background
+  ecgCtx.fillStyle = 'rgba(0, 0, 0, 0.2)';
+  ecgCtx.fillRect(0, 0, w, h);
+
+  // Grid
+  ecgCtx.strokeStyle = 'rgba(52, 211, 153, 0.06)';
+  ecgCtx.lineWidth = 0.5;
+  for (let x = 0; x < w; x += 10) {
+    ecgCtx.beginPath();
+    ecgCtx.moveTo(x, 0);
+    ecgCtx.lineTo(x, h);
+    ecgCtx.stroke();
+  }
+
+  // Draw ECG waveform
+  const cy = h / 2;
+  ecgCtx.beginPath();
+  ecgCtx.strokeStyle = '#5eeaaf';
+  ecgCtx.lineWidth = 2;
+  ecgCtx.shadowColor = 'rgba(52, 211, 153, 0.5)';
+  ecgCtx.shadowBlur = 4;
+
+  for (let x = 0; x < w; x++) {
+    const phase = ((x / w) * 2 + state.phase) % 1;
+    const y = cy + ecgWaveform(phase) * (h * 0.35);
+
+    if (x === 0) ecgCtx.moveTo(x, y);
+    else ecgCtx.lineTo(x, y);
+  }
+  ecgCtx.stroke();
+  ecgCtx.shadowBlur = 0;
+}
+
+function ecgWaveform(phase) {
+  // Simplified ECG waveform
+  if (phase < 0.04) {
+    // P wave
+    return -Math.sin(phase / 0.04 * Math.PI) * 0.15;
+  } else if (phase < 0.08) {
+    // PR segment
+    return 0;
+  } else if (phase < 0.09) {
+    // Q wave
+    return (phase - 0.08) / 0.01 * 0.1;
+  } else if (phase < 0.11) {
+    // R wave
+    const t = (phase - 0.09) / 0.02;
+    return 0.1 - t * 1.1;
+  } else if (phase < 0.13) {
+    // S wave
+    const t = (phase - 0.11) / 0.02;
+    return -1 + t * 1.15;
+  } else if (phase < 0.16) {
+    // ST segment
+    return 0.15 * (1 - (phase - 0.13) / 0.03);
+  } else if (phase < 0.28) {
+    // T wave
+    const t = (phase - 0.16) / 0.12;
+    return -Math.sin(t * Math.PI) * 0.3;
+  } else {
+    return 0;
+  }
+}
+
+// ─── Start ───────────────────────────────────────────────────
+document.addEventListener('DOMContentLoaded', init);
+
+</script>
+</body>
+</html>
