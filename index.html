@@ -612,11 +612,145 @@ body {
 }
 
 @media (max-width: 768px) {
+  html {
+    font-size: 15px;
+  }
+
+  .app-container {
+    height: auto;
+    max-height: none;
+    overflow: auto;
+  }
+
+  /* Header — compact */
+  .app-header {
+    padding: 10px 16px;
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+  .app-header h1 { font-size: 1.15rem; }
+  .subtitle { font-size: 0.75rem; }
+  .logo-icon { width: 36px; height: 36px; }
+  .header-left { gap: 10px; }
+  .header-right { gap: 10px; }
+  .gls-display, .hr-display {
+    padding: 6px 12px;
+    gap: 6px;
+  }
+  .gls-value { font-size: 1.25rem; }
+  .hr-value { font-size: 1.15rem; }
+  .gls-label, .hr-label { font-size: 0.75rem; }
+  .hr-unit { font-size: 0.75rem; }
+
+  /* Main — single column, scrollable */
   .main-content {
     grid-template-columns: 1fr;
+    gap: 10px;
+    padding: 10px 12px;
+    overflow: visible;
   }
-  .controls-bar {
+
+  /* Panels */
+  .panel {
+    border-radius: var(--radius-md);
+  }
+  .panel-header {
+    padding: 10px 14px;
     flex-wrap: wrap;
+    gap: 8px;
+  }
+  .panel-header h2 { font-size: 0.95rem; }
+  .panel-badge { font-size: 0.75rem; padding: 3px 8px; }
+
+  /* Tabs */
+  .view-tab, .curve-tab {
+    font-size: 0.78rem;
+    padding: 5px 10px;
+  }
+
+  /* LV Canvas */
+  .canvas-container {
+    padding: 4px;
+  }
+  #lvCanvas {
+    max-height: 320px;
+  }
+  .phase-indicator {
+    font-size: 0.8rem;
+    padding: 4px 10px;
+    top: 8px;
+    right: 8px;
+  }
+  .ecg-strip { height: 45px; }
+
+  /* Bull's Eye */
+  .bullseye-container {
+    padding: 8px;
+  }
+  #bullseyeCanvas {
+    max-height: 280px;
+  }
+  .segment-info {
+    padding: 8px 14px;
+    font-size: 0.85rem;
+    max-width: 280px;
+  }
+  .color-scale { padding: 6px 16px 10px; }
+  .scale-labels { font-size: 0.75rem; }
+
+  /* Curves */
+  .curves-container { padding: 6px 8px; }
+  #curvesCanvas { max-height: 220px; }
+  .curves-legend {
+    gap: 6px;
+    padding: 8px 12px 10px;
+  }
+  .legend-item { font-size: 0.72rem; gap: 3px; }
+  .legend-dot { width: 8px; height: 3px; }
+
+  /* Controls Bar — stacked */
+  .controls-bar {
+    flex-direction: column;
+    gap: 12px;
+    padding: 12px 16px;
+  }
+  .control-label { font-size: 0.75rem; }
+  .pathology-selector {
+    gap: 5px;
+  }
+  .path-btn {
+    font-size: 0.78rem;
+    padding: 6px 10px;
+  }
+  .slider { width: 120px; }
+  .slider-value { font-size: 0.85rem; }
+  .info-card { padding: 10px 14px; }
+  .info-card h3 { font-size: 0.9rem; }
+  .info-card p { font-size: 0.78rem; }
+  .play-btn, .reset-btn { width: 36px; height: 36px; }
+}
+
+/* Extra small — phones in portrait */
+@media (max-width: 420px) {
+  html { font-size: 14px; }
+  .app-header {
+    padding: 8px 12px;
+  }
+  .header-right {
+    width: 100%;
+    justify-content: flex-end;
+  }
+  .main-content {
+    padding: 8px;
+    gap: 8px;
+  }
+  .gls-display, .hr-display {
+    padding: 5px 10px;
+  }
+  .gls-value { font-size: 1.1rem; }
+  .path-btn {
+    font-size: 0.72rem;
+    padding: 5px 8px;
   }
 }
 
