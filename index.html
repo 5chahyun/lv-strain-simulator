@@ -1166,12 +1166,23 @@ function bindEvents() {
     state.ecgBuffer = [];
   });
 
-  // Bull's eye hover
+  // Bull's eye hover (desktop)
   bullseyeCanvas.addEventListener('mousemove', handleBullseyeHover);
   bullseyeCanvas.addEventListener('mouseleave', () => {
     state.hoveredSegment = -1;
     document.getElementById('segmentInfo').querySelector('.seg-name').textContent = 'Hover over segment';
     document.getElementById('segmentInfo').querySelector('.seg-value').textContent = '—';
+  });
+
+  // Bull's eye touch (mobile)
+  bullseyeCanvas.addEventListener('touchstart', handleBullseyeTouch, { passive: false });
+  bullseyeCanvas.addEventListener('touchmove', handleBullseyeTouch, { passive: false });
+  bullseyeCanvas.addEventListener('touchend', () => {
+    setTimeout(() => {
+      state.hoveredSegment = -1;
+      document.getElementById('segmentInfo').querySelector('.seg-name').textContent = 'Tap segment';
+      document.getElementById('segmentInfo').querySelector('.seg-value').textContent = '—';
+    }, 1500);
   });
 }
 
@@ -2208,6 +2219,62 @@ function handleBullseyeHover(e) {
     const valEl = document.getElementById('segmentInfo').querySelector('.seg-value');
     valEl.textContent = strainVal.toFixed(1) + '%';
     valEl.style.color = strainToColor(strainVal);
+  }
+}
+
+function handleBullseyeTouch(e) {
+  const touch = e.touches[0];
+  if (!touch) return;
+
+  const rect = bullseyeCanvas.getBoundingClientRect();
+  // Scale touch coordinates to logical canvas coordinates
+  const scaleX = bullseyeCanvas._logicalWidth / rect.width;
+  const scaleY = bullseyeCanvas._logicalHeight / rect.height;
+  const x = (touch.clientX - rect.left) * scaleX;
+  const y = (touch.clientY - rect.top) * scaleY;
+
+  const w = bullseyeCanvas._logicalWidth;
+  const h = bullseyeCanvas._logicalHeight;
+  const cx = w / 2;
+  const cy = h / 2;
+  const maxR = Math.min(w, h) / 2 - 20;
+
+  const dx = x - cx;
+  const dy = y - cy;
+  const dist = Math.sqrt(dx * dx + dy * dy);
+
+  // Only prevent scrolling if touching inside the bull's eye circle
+  if (dist <= maxR) {
+    e.preventDefault();
+    const angle = Math.atan2(dy, dx);
+    let segIdx = -1;
+
+    if (dist <= maxR * 0.12) {
+      segIdx = 16;
+    } else if (dist <= maxR * 0.32) {
+      const apicalAngles = [-Math.PI / 2, 0, Math.PI / 2, Math.PI];
+      for (let i = 0; i < 4; i++) {
+        if (angleInRange(angle, apicalAngles[i] - Math.PI / 4, apicalAngles[i] + Math.PI / 4)) {
+          segIdx = 12 + i;
+          break;
+        }
+      }
+    } else if (dist <= maxR * 0.6) {
+      segIdx = 6 + getHexSegment(angle);
+    } else {
+      segIdx = getHexSegment(angle);
+    }
+
+    state.hoveredSegment = segIdx;
+
+    if (segIdx >= 0 && segIdx < 17) {
+      const p = PATHOLOGIES[state.pathology];
+      document.getElementById('segmentInfo').querySelector('.seg-name').textContent = SEGMENT_NAMES[segIdx];
+      const strainVal = p.strain[segIdx];
+      const valEl = document.getElementById('segmentInfo').querySelector('.seg-value');
+      valEl.textContent = strainVal.toFixed(1) + '%';
+      valEl.style.color = strainToColor(strainVal);
+    }
   }
 }
 
