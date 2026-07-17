@@ -779,7 +779,7 @@ body {
   background: rgba(255, 255, 255, 0.25);
 }
 
-</style>
+  </style>
 </head>
 <body>
   <div class="app-container">
@@ -820,11 +820,11 @@ body {
       <!-- Left Panel: LV Animation -->
       <section class="panel lv-panel">
         <div class="panel-header">
-          <h2>Apical 4-Chamber View</h2>
+          <h2>Mid-Esophageal 4-Chamber</h2>
           <div class="view-tabs">
-            <button class="view-tab active" data-view="a4c">A4C</button>
-            <button class="view-tab" data-view="a2c">A2C</button>
-            <button class="view-tab" data-view="aplax">APLAX</button>
+            <button class="view-tab active" data-view="a4c">ME 4C</button>
+            <button class="view-tab" data-view="a2c">ME 2C</button>
+            <button class="view-tab" data-view="aplax">ME LAX</button>
           </div>
         </div>
         <div class="canvas-container">
@@ -876,7 +876,7 @@ body {
         <div class="curves-container">
           <canvas id="curvesCanvas" width="520" height="350"></canvas>
         </div>
-        <div class="curves-legend" id="curvesLegend"></div>
+        <div class="curves-legend" id="curvesLegend" style="display:none;"></div>
       </section>
     </main>
 
@@ -929,7 +929,9 @@ body {
     </footer>
   </div>
 
-  <script>
+  <script src="app.js"></script>
+</body>
+</html><script>
 /* ============================================================
    LV Strain Simulator — Core Application Logic
    ============================================================ */
@@ -1135,6 +1137,11 @@ function bindEvents() {
       document.querySelectorAll('.view-tab').forEach(t => t.classList.remove('active'));
       tab.classList.add('active');
       state.view = tab.dataset.view;
+      // Update panel header
+      const titleMap = { a4c: 'Mid-Esophageal 4-Chamber', a2c: 'Mid-Esophageal 2-Chamber', aplax: 'Mid-Esophageal Long Axis' };
+      const panelH2 = document.querySelector('.lv-panel .panel-header h2');
+      if (panelH2) panelH2.textContent = titleMap[state.view] || '';
+      updateLegend();
     });
   });
 
@@ -1319,27 +1326,27 @@ function drawLV() {
   const w = lvCanvas._logicalWidth;
   const h = lvCanvas._logicalHeight;
   const cx = w / 2;
-  const cy = h / 2 - 5;
+  const cy = h / 2 + 10;
   const p = PATHOLOGIES[state.pathology];
 
   lvCtx.clearRect(0, 0, w, h);
 
-  // Background grid
-  drawGrid(lvCtx, w, h);
+  // ─── Ultrasound-style background ───
+  drawUltrasoundBackground(lvCtx, w, h);
 
   // Compute contraction factor
   const contractPhase = getContractionFactor(state.phase);
 
   // Draw LV walls using Bezier curves
   const isDCM = state.pathology === 'dcm';
-  const baseScale = isDCM ? 1.3 : 1;
-  const wallThickness = isDCM ? 7 : 10;
+  const sizeMultiplier = 1.4; // BIGGER LV
+  const baseScale = (isDCM ? 1.3 : 1) * sizeMultiplier;
+  const wallThickness = isDCM ? 9 : 13;
 
   // Determine which segments are visible in current view
   const viewSegments = getViewSegments(state.view);
 
-  // Draw view-specific surrounding structures FIRST (behind LV)
-  drawSurroundingStructures(lvCtx, cx, cy, baseScale, contractPhase, state.view);
+  // Surrounding structures removed for cleaner LV-only display
 
   // --- Outer wall (epicardium) ---
   drawLVWall(lvCtx, cx, cy, baseScale, wallThickness, contractPhase, p, viewSegments, false);
@@ -1356,12 +1363,15 @@ function drawLV() {
   // --- View-specific labels on the walls ---
   drawWallLabels(lvCtx, cx, cy, baseScale, contractPhase, state.view);
 
+  // ─── Ultrasound overlay elements ───
+  drawUltrasoundOverlay(lvCtx, w, h);
+
   // View label at bottom
   lvCtx.font = 'bold 15px Inter';
   lvCtx.fillStyle = 'rgba(192, 200, 220, 0.8)';
   lvCtx.textAlign = 'center';
 
-  const viewLabel = { a4c: 'Apical 4-Chamber', a2c: 'Apical 2-Chamber', aplax: 'Apical Long Axis' };
+  const viewLabel = { a4c: 'ME 4-Chamber', a2c: 'ME 2-Chamber', aplax: 'ME Long Axis' };
   lvCtx.fillText(viewLabel[state.view] || '', cx, h - 8);
 }
 
@@ -1375,8 +1385,8 @@ function drawSurroundingStructures(ctx, cx, cy, baseScale, contractPhase, view) 
   ctx.save();
 
   if (view === 'a4c') {
-    // ─── A4C: Draw RV (right side), RA, LA ───
-    // Right Ventricle (thinner wall, wider, to the right of septum)
+    // ─── TEE ME 4C: RV on LEFT, LV on RIGHT ───
+    // Right Ventricle (LEFT side of screen in TEE)
     const rvOffsetX = baseWidth * 1.05;
     const rvWidth = baseWidth * 0.65;
     const rvLength = lvLength * 0.75;
@@ -1384,34 +1394,37 @@ function drawSurroundingStructures(ctx, cx, cy, baseScale, contractPhase, view) 
     const rvApexY = cy + rvLength * 0.4;
 
     ctx.beginPath();
-    ctx.moveTo(cx + rvOffsetX, rvBaseY);
+    ctx.moveTo(cx - rvOffsetX, rvBaseY);
     ctx.bezierCurveTo(
-      cx + rvOffsetX + rvWidth * 0.3, rvBaseY + (rvApexY - rvBaseY) * 0.3,
-      cx + rvOffsetX + rvWidth * 0.5, rvApexY - 30,
-      cx + rvOffsetX + rvWidth * 0.15, rvApexY
+      cx - rvOffsetX - rvWidth * 0.3, rvBaseY + (rvApexY - rvBaseY) * 0.3,
+      cx - rvOffsetX - rvWidth * 0.5, rvApexY - 30,
+      cx - rvOffsetX - rvWidth * 0.15, rvApexY
     );
     ctx.bezierCurveTo(
-      cx + rvOffsetX - 5, rvApexY + 5,
-      cx + baseWidth * 0.85, cy + lvLength * 0.3,
-      cx + baseWidth * 0.75, rvBaseY + 10
+      cx - rvOffsetX + 5, rvApexY + 5,
+      cx - baseWidth * 0.85, cy + lvLength * 0.3,
+      cx - baseWidth * 0.75, rvBaseY + 10
     );
-    ctx.strokeStyle = 'rgba(160, 180, 220, 0.3)';
-    ctx.lineWidth = 1.5;
+    ctx.strokeStyle = 'rgba(210, 200, 175, 0.5)';
+    ctx.lineWidth = 2;
+    ctx.shadowColor = 'rgba(210, 200, 175, 0.2)';
+    ctx.shadowBlur = 3;
     ctx.stroke();
-    ctx.fillStyle = 'rgba(20, 30, 55, 0.4)';
+    ctx.shadowBlur = 0;
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.6)';
     ctx.fill();
 
-    // RV label
+    // RV label (LEFT side)
     ctx.font = 'bold 14px Inter';
-    ctx.fillStyle = 'rgba(160, 180, 220, 0.5)';
+    ctx.fillStyle = 'rgba(200, 210, 230, 0.6)';
     ctx.textAlign = 'center';
-    ctx.fillText('RV', cx + rvOffsetX + rvWidth * 0.15, cy + 20);
+    ctx.fillText('RV', cx - rvOffsetX - rvWidth * 0.15, cy + 20);
 
-    // Left Atrium (above LV, left side)
-    drawAtrium(ctx, cx - baseWidth * 0.5, baseY - 45, baseWidth * 0.8, 40, 'LA');
+    // Right Atrium (LEFT side, above RV)
+    drawAtrium(ctx, cx - rvOffsetX - rvWidth * 0.1, rvBaseY - 40, rvWidth * 0.7, 35, 'RA');
 
-    // Right Atrium (above RV, right side)
-    drawAtrium(ctx, cx + rvOffsetX + rvWidth * 0.1, rvBaseY - 40, rvWidth * 0.7, 35, 'RA');
+    // Left Atrium (RIGHT side, above LV — closest to probe in TEE)
+    drawAtrium(ctx, cx + baseWidth * 0.5, baseY - 45, baseWidth * 0.8, 40, 'LA');
 
   } else if (view === 'a2c') {
     // ─── A2C: Only LA above, no RV visible ───
@@ -1428,12 +1441,12 @@ function drawSurroundingStructures(ctx, cx, cy, baseScale, contractPhase, view) 
     ctx.setLineDash([]);
 
   } else if (view === 'aplax') {
-    // ─── APLAX: LA behind, Aortic root at upper-right ───
-    // Left Atrium (behind/above, slightly left)
-    drawAtrium(ctx, cx - baseWidth * 0.3, baseY - 50, baseWidth * 0.9, 45, 'LA');
+    // ─── ME LAX: LA behind, Aortic root at upper-left (TEE) ───
+    // Left Atrium (RIGHT side in TEE)
+    drawAtrium(ctx, cx + baseWidth * 0.3, baseY - 50, baseWidth * 0.9, 45, 'LA');
 
     // Aortic root (upper right, tubular structure)
-    const aoX = cx + baseWidth * 0.3;
+    const aoX = cx - baseWidth * 0.3;
     const aoY = baseY - 30;
     const aoWidth = 22;
     const aoHeight = 55;
@@ -1481,14 +1494,17 @@ function drawSurroundingStructures(ctx, cx, cy, baseScale, contractPhase, view) 
 function drawAtrium(ctx, cx, cy, width, height, label) {
   ctx.beginPath();
   ctx.ellipse(cx, cy, width / 2, height, 0, 0, 2 * Math.PI);
-  ctx.strokeStyle = 'rgba(160, 180, 220, 0.25)';
-  ctx.lineWidth = 1.5;
+  ctx.strokeStyle = 'rgba(210, 200, 175, 0.45)';
+  ctx.lineWidth = 2;
+  ctx.shadowColor = 'rgba(210, 200, 175, 0.15)';
+  ctx.shadowBlur = 3;
   ctx.stroke();
-  ctx.fillStyle = 'rgba(20, 30, 55, 0.35)';
+  ctx.shadowBlur = 0;
+  ctx.fillStyle = 'rgba(0, 0, 0, 0.5)';
   ctx.fill();
 
   ctx.font = 'bold 14px Inter';
-  ctx.fillStyle = 'rgba(160, 180, 220, 0.5)';
+  ctx.fillStyle = 'rgba(200, 210, 230, 0.6)';
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
   ctx.fillText(label, cx, cy);
@@ -1504,9 +1520,9 @@ function drawWallLabels(ctx, cx, cy, baseScale, contractPhase, view) {
   ctx.textBaseline = 'middle';
 
   const labels = {
-    a4c: { left: 'Lateral', right: 'Septal' },
-    a2c: { left: 'Anterior', right: 'Inferior' },
-    aplax: { left: 'Anteroseptal', right: 'Inferolateral' }
+    a4c: { left: 'Septal', right: 'Lateral' },
+    a2c: { left: 'Inferior', right: 'Anterior' },
+    aplax: { left: 'Inferolateral', right: 'Anteroseptal' }
   };
 
   const { left, right } = labels[view];
@@ -1530,20 +1546,146 @@ function drawWallLabels(ctx, cx, cy, baseScale, contractPhase, view) {
   ctx.restore();
 }
 
+function drawUltrasoundBackground(ctx, w, h) {
+  // Pure black base
+  ctx.fillStyle = '#000000';
+  ctx.fillRect(0, 0, w, h);
+
+  const apexX = w / 2, apexY = 5;
+  const sa = 78 * Math.PI / 180; // wider sector angle
+
+  // Sector clip
+  ctx.save();
+  ctx.beginPath();
+  ctx.moveTo(apexX, apexY);
+  ctx.arc(apexX, apexY, h * 1.1, Math.PI / 2 - sa, Math.PI / 2 + sa);
+  ctx.closePath();
+  ctx.clip();
+
+  // Background fill — slightly brighter for echo look
+  const dg = ctx.createRadialGradient(apexX, apexY, 0, apexX, apexY, h);
+  dg.addColorStop(0, 'rgba(8,10,18,1)');
+  dg.addColorStop(0.1, 'rgba(5,7,14,1)');
+  dg.addColorStop(0.5, 'rgba(3,5,10,1)');
+  dg.addColorStop(1, 'rgba(1,2,6,1)');
+  ctx.fillStyle = dg;
+  ctx.fillRect(0, 0, w, h);
+
+  // DENSE speckle noise — much more visible
+  for (let i = 0; i < 5000; i++) {
+    const x = Math.random() * w;
+    const y = Math.random() * h + 8;
+    const angle = Math.atan2(y - apexY, x - apexX);
+    const dist = Math.sqrt((x - apexX) ** 2 + (y - apexY) ** 2);
+    if (Math.abs(angle - Math.PI / 2) < sa && dist < h) {
+      const depthFade = 1 - dist / h * 0.4;
+      const b = (Math.random() * 35 + 5) * depthFade;
+      const alpha = 0.2 + Math.random() * 0.35;
+      const sz = Math.random() < 0.15 ? 2 : 1;
+      ctx.fillStyle = `rgba(${b|0},${b*0.95|0},${b*0.85|0},${alpha})`;
+      ctx.fillRect(x, y, sz, sz);
+    }
+  }
+
+  // Bright tissue-like scatter near walls
+  for (let i = 0; i < 800; i++) {
+    const x = apexX + (Math.random() - 0.5) * w * 0.6;
+    const y = h * 0.2 + Math.random() * h * 0.6;
+    const angle = Math.atan2(y - apexY, x - apexX);
+    if (Math.abs(angle - Math.PI / 2) < sa) {
+      const b = Math.random() * 50 + 20;
+      ctx.fillStyle = `rgba(${b|0},${b*0.9|0},${b*0.8|0},${0.15 + Math.random() * 0.15})`;
+      ctx.fillRect(x, y, Math.random() < 0.3 ? 2 : 1, Math.random() < 0.3 ? 2 : 1);
+    }
+  }
+
+  // Scan lines (radial) — subtle
+  ctx.strokeStyle = 'rgba(25,35,55,0.04)';
+  ctx.lineWidth = 0.5;
+  for (let a = -sa; a <= sa; a += sa / 50) {
+    ctx.beginPath();
+    ctx.moveTo(apexX, apexY);
+    ctx.lineTo(apexX + Math.sin(a) * h, apexY + Math.cos(a) * h);
+    ctx.stroke();
+  }
+
+  // Arc depth lines — visible
+  ctx.strokeStyle = 'rgba(40,55,80,0.12)';
+  ctx.lineWidth = 0.5;
+  for (let r = 50; r < h; r += 50) {
+    ctx.beginPath();
+    ctx.arc(apexX, apexY, r, Math.PI / 2 - sa, Math.PI / 2 + sa);
+    ctx.stroke();
+  }
+
+  ctx.restore();
+
+  // Sector boundary lines — VISIBLE
+  ctx.strokeStyle = 'rgba(80,110,160,0.5)';
+  ctx.lineWidth = 1.5;
+  ctx.beginPath(); ctx.moveTo(apexX, apexY);
+  ctx.lineTo(apexX + Math.sin(-sa) * h * 1.1, apexY + Math.cos(-sa) * h * 1.1); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(apexX, apexY);
+  ctx.lineTo(apexX + Math.sin(sa) * h * 1.1, apexY + Math.cos(sa) * h * 1.1); ctx.stroke();
+
+  // Outside sector = dark gray (machine border)
+  // Left side
+  ctx.fillStyle = '#0c0e14';
+  ctx.beginPath();
+  ctx.moveTo(0, 0); ctx.lineTo(apexX, apexY);
+  ctx.lineTo(apexX + Math.sin(-sa) * h * 1.1, apexY + Math.cos(-sa) * h * 1.1);
+  ctx.lineTo(0, h); ctx.lineTo(0, 0);
+  ctx.closePath(); ctx.fill();
+  // Right side
+  ctx.beginPath();
+  ctx.moveTo(w, 0); ctx.lineTo(apexX, apexY);
+  ctx.lineTo(apexX + Math.sin(sa) * h * 1.1, apexY + Math.cos(sa) * h * 1.1);
+  ctx.lineTo(w, h); ctx.lineTo(w, 0);
+  ctx.closePath(); ctx.fill();
+}
+
+function drawUltrasoundOverlay(ctx, w, h) {
+  const ax = w / 2;
+
+  // Probe indicator — bright dot
+  ctx.fillStyle = 'rgba(130,170,230,0.8)';
+  ctx.beginPath(); ctx.arc(ax, 4, 3, 0, Math.PI * 2); ctx.fill();
+
+  // Depth markers (right side) — brighter
+  ctx.font = 'bold 10px Inter';
+  ctx.fillStyle = 'rgba(130,170,230,0.6)';
+  ctx.textAlign = 'right';
+  for (let d = 2; d <= 14; d += 2) {
+    const y = 5 + (d / 16) * (h - 25);
+    ctx.fillRect(w - 16, y - 0.5, 6, 1);
+    ctx.fillText(d + '', w - 18, y + 4);
+  }
+  ctx.font = '9px Inter';
+  ctx.fillText('cm', w - 18, 18);
+
+  // Focus zone (left side)
+  const fy = h * 0.42;
+  ctx.fillStyle = 'rgba(130,170,230,0.6)';
+  ctx.beginPath();
+  ctx.moveTo(2, fy - 5); ctx.lineTo(8, fy); ctx.lineTo(2, fy + 5);
+  ctx.closePath(); ctx.fill();
+
+  // Machine info text (top-left)
+  ctx.font = '10px Inter';
+  ctx.fillStyle = 'rgba(130,170,230,0.5)';
+  ctx.textAlign = 'left';
+  ctx.fillText('2D', 8, 15);
+  ctx.fillText('HR: ' + (typeof state !== 'undefined' ? state.heartRate : 72), 8, 27);
+}
+
 function drawGrid(ctx, w, h) {
   ctx.strokeStyle = 'rgba(255, 255, 255, 0.03)';
   ctx.lineWidth = 0.5;
   for (let x = 0; x < w; x += 20) {
-    ctx.beginPath();
-    ctx.moveTo(x, 0);
-    ctx.lineTo(x, h);
-    ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, h); ctx.stroke();
   }
   for (let y = 0; y < h; y += 20) {
-    ctx.beginPath();
-    ctx.moveTo(0, y);
-    ctx.lineTo(w, y);
-    ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(w, y); ctx.stroke();
   }
 }
 
@@ -1566,27 +1708,27 @@ function getContractionFactor(phase) {
 }
 
 function getViewSegments(view) {
-  // Return pairs of [leftSeg, rightSeg] for basal, mid, apical
+  // Return pairs of [leftSeg, rightSeg] — TEE orientation (mirrored from TTE)
   switch (view) {
     case 'a4c':
       return {
-        basal: [5, 3],    // anterolateral, inferoseptal
-        mid: [11, 9],     // mid anterolateral, mid inferoseptal
-        apical: [15, 13], // apical lateral, apical septal
+        basal: [3, 5],    // inferoseptal(left/septal), anterolateral(right/lateral)
+        mid: [9, 11],     // mid inferoseptal(left), mid anterolateral(right)
+        apical: [13, 15], // apical septal(left), apical lateral(right)
         apex: 16
       };
     case 'a2c':
       return {
-        basal: [0, 4],    // anterior, inferior
-        mid: [6, 10],     // mid anterior, mid inferior
-        apical: [12, 14], // apical anterior, apical inferior
+        basal: [4, 0],    // inferior(left), anterior(right)
+        mid: [10, 6],     // mid inferior(left), mid anterior(right)
+        apical: [14, 12], // apical inferior(left), apical anterior(right)
         apex: 16
       };
     case 'aplax':
       return {
-        basal: [1, 5],    // anteroseptal, inferolateral
-        mid: [7, 11],     // mid anteroseptal, mid inferolateral
-        apical: [13, 15], // apical septal, apical lateral
+        basal: [5, 1],    // inferolateral(left), anteroseptal(right)
+        mid: [11, 7],     // mid inferolateral(left), mid anteroseptal(right)
+        apical: [15, 13], // apical lateral(left), apical septal(right)
         apex: 16
       };
   }
@@ -1671,15 +1813,46 @@ function drawLVWall(ctx, cx, cy, baseScale, wallThickness, contractPhase, pathDa
   );
 
   if (isInner) {
-    ctx.strokeStyle = 'rgba(200, 210, 230, 0.35)';
-    ctx.lineWidth = 1;
+    // Endocardial border — BRIGHT echogenic line
+    ctx.strokeStyle = 'rgba(220, 215, 200, 0.7)';
+    ctx.lineWidth = 2;
+    ctx.shadowColor = 'rgba(220, 215, 200, 0.3)';
+    ctx.shadowBlur = 3;
     ctx.stroke();
-    ctx.fillStyle = 'rgba(10, 14, 26, 0.7)';
+    ctx.shadowBlur = 0;
+    // Blood pool (pitch black cavity)
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.95)';
     ctx.fill();
   } else {
-    ctx.strokeStyle = 'rgba(200, 210, 230, 0.6)';
-    ctx.lineWidth = 2;
+    // Myocardial tissue — BRIGHT echogenic walls like real ultrasound
+    ctx.save();
+    const wallGrad = ctx.createLinearGradient(cx - 100, cy - 80, cx + 100, cy + 100);
+    wallGrad.addColorStop(0, 'rgba(180, 165, 140, 0.45)');
+    wallGrad.addColorStop(0.25, 'rgba(200, 185, 160, 0.35)');
+    wallGrad.addColorStop(0.5, 'rgba(170, 155, 130, 0.40)');
+    wallGrad.addColorStop(0.75, 'rgba(190, 175, 150, 0.35)');
+    wallGrad.addColorStop(1, 'rgba(160, 145, 120, 0.30)');
+    ctx.fillStyle = wallGrad;
+    ctx.fill();
+
+    // Epicardial border — VERY bright echo line
+    ctx.strokeStyle = 'rgba(230, 220, 200, 0.7)';
+    ctx.lineWidth = 2.5;
+    ctx.shadowColor = 'rgba(230, 220, 200, 0.35)';
+    ctx.shadowBlur = 6;
     ctx.stroke();
+    ctx.shadowBlur = 0;
+
+    // Speckle texture WITHIN the wall
+    ctx.clip(); // Clip to wall shape
+    for (let i = 0; i < 300; i++) {
+      const sx = cx + (Math.random() - 0.5) * 200;
+      const sy = cy + (Math.random() - 0.5) * 350;
+      const b = Math.random() * 80 + 60;
+      ctx.fillStyle = `rgba(${b|0},${b*0.9|0},${b*0.8|0},${0.08 + Math.random() * 0.12})`;
+      ctx.fillRect(sx, sy, Math.random() < 0.3 ? 2 : 1, Math.random() < 0.3 ? 2 : 1);
+    }
+    ctx.restore();
   }
 }
 
@@ -2066,7 +2239,7 @@ function drawBullsEye() {
 
   bullseyeCtx.clearRect(0, 0, w, h);
 
-  const maxR = Math.min(w, h) / 2 - 20;
+  const maxR = Math.min(w, h) / 2 - 48;
 
   // Ring radii
   const rings = [
@@ -2076,14 +2249,15 @@ function drawBullsEye() {
     { inner: 0, outer: maxR * 0.12, count: 1, startSeg: 16 }          // Apex
   ];
 
-  // AHA segment angular offsets (starting from anterior, going clockwise)
+  // AHA segment angular offsets — TEE orientation (rotated 180° from standard)
+  // Anterior at 6 o'clock, Inferior at 12 o'clock
   const baseAngles = [
-    -Math.PI / 2,                 // Anterior (12 o'clock)
-    -Math.PI / 2 + Math.PI / 3,  // Anteroseptal
-    -Math.PI / 2 + 2 * Math.PI / 3, // Inferoseptal
-    Math.PI / 2,                  // Inferior
-    Math.PI / 2 + Math.PI / 3,   // Inferolateral
-    Math.PI / 2 + 2 * Math.PI / 3  // Anterolateral
+    Math.PI / 2,                   // Anterior (6 o'clock)
+    Math.PI / 2 + Math.PI / 3,    // Anteroseptal
+    Math.PI / 2 + 2 * Math.PI / 3, // Inferoseptal
+    -Math.PI / 2,                  // Inferior (12 o'clock)
+    -Math.PI / 2 + Math.PI / 3,   // Inferolateral
+    -Math.PI / 2 + 2 * Math.PI / 3 // Anterolateral
   ];
 
   rings.forEach((ring, ri) => {
@@ -2099,7 +2273,8 @@ function drawBullsEye() {
         startAngle = baseAngles[i] - segAngle / 2;
         endAngle = baseAngles[i] + segAngle / 2;
       } else if (ring.count === 4) {
-        const apicalAngles = [-Math.PI / 2, 0, Math.PI / 2, Math.PI];
+        // Apical: TEE rotated 180°
+        const apicalAngles = [Math.PI / 2, Math.PI, -Math.PI / 2, 0];
         startAngle = apicalAngles[i] - Math.PI / 4;
         endAngle = apicalAngles[i] + Math.PI / 4;
       } else {
@@ -2153,23 +2328,23 @@ function drawBullsEye() {
   });
 
   // Ring labels
+  bullseyeCtx.font = '12px Inter';
+  bullseyeCtx.fillStyle = 'rgba(192, 200, 220, 0.55)';
+  bullseyeCtx.textAlign = 'left';
+  bullseyeCtx.fillText('Basal', cx + maxR * 0.62, cy + maxR * 0.18);
+  bullseyeCtx.fillText('Mid', cx + maxR * 0.34, cy + maxR * 0.18);
+  bullseyeCtx.fillText('Apical', cx + maxR * 0.05, cy + maxR * 0.18);
+
+  // Direction labels — standard AHA bull's eye orientation
   bullseyeCtx.font = 'bold 13px Inter';
   bullseyeCtx.fillStyle = 'rgba(192, 200, 220, 0.7)';
-  bullseyeCtx.textAlign = 'left';
-  bullseyeCtx.fillText('Basal', cx + maxR + 4, cy);
-  bullseyeCtx.fillText('Mid', cx + maxR * 0.6 + 4, cy - 12);
-  bullseyeCtx.fillText('Apical', cx + maxR * 0.32 + 4, cy - 24);
-
-  // Direction labels
-  bullseyeCtx.font = 'bold 14px Inter';
-  bullseyeCtx.fillStyle = 'rgba(192, 200, 220, 0.65)';
   bullseyeCtx.textAlign = 'center';
-  bullseyeCtx.fillText('ANT', cx, cy - maxR - 8);
-  bullseyeCtx.fillText('INF', cx, cy + maxR + 14);
+  bullseyeCtx.fillText('INF', cx, cy - maxR - 10);
+  bullseyeCtx.fillText('ANT', cx, cy + maxR + 16);
   bullseyeCtx.textAlign = 'right';
-  bullseyeCtx.fillText('SEPT', cx - maxR - 6, cy + 4);
+  bullseyeCtx.fillText('SEPT', cx - maxR - 8, cy + 4);
   bullseyeCtx.textAlign = 'left';
-  bullseyeCtx.fillText('LAT', cx + maxR + 6, cy + 4);
+  bullseyeCtx.fillText('LAT', cx + maxR + 8, cy + 4);
 }
 
 function handleBullseyeHover(e) {
@@ -2180,7 +2355,7 @@ function handleBullseyeHover(e) {
   const h = bullseyeCanvas._logicalHeight;
   const cx = w / 2;
   const cy = h / 2;
-  const maxR = Math.min(w, h) / 2 - 20;
+  const maxR = Math.min(w, h) / 2 - 48;
 
   const dx = x - cx;
   const dy = y - cy;
@@ -2192,8 +2367,8 @@ function handleBullseyeHover(e) {
   if (dist <= maxR * 0.12) {
     segIdx = 16; // Apex
   } else if (dist <= maxR * 0.32) {
-    // Apical (4 segments)
-    const apicalAngles = [-Math.PI / 2, 0, Math.PI / 2, Math.PI];
+    // Apical (4 segments) — TEE rotated
+    const apicalAngles = [Math.PI / 2, Math.PI, -Math.PI / 2, 0];
     for (let i = 0; i < 4; i++) {
       let start = apicalAngles[i] - Math.PI / 4;
       let end = apicalAngles[i] + Math.PI / 4;
@@ -2237,7 +2412,7 @@ function handleBullseyeTouch(e) {
   const h = bullseyeCanvas._logicalHeight;
   const cx = w / 2;
   const cy = h / 2;
-  const maxR = Math.min(w, h) / 2 - 20;
+  const maxR = Math.min(w, h) / 2 - 48;
 
   const dx = x - cx;
   const dy = y - cy;
@@ -2252,7 +2427,7 @@ function handleBullseyeTouch(e) {
     if (dist <= maxR * 0.12) {
       segIdx = 16;
     } else if (dist <= maxR * 0.32) {
-      const apicalAngles = [-Math.PI / 2, 0, Math.PI / 2, Math.PI];
+      const apicalAngles = [Math.PI / 2, Math.PI, -Math.PI / 2, 0];
       for (let i = 0; i < 4; i++) {
         if (angleInRange(angle, apicalAngles[i] - Math.PI / 4, apicalAngles[i] + Math.PI / 4)) {
           segIdx = 12 + i;
@@ -2279,14 +2454,14 @@ function handleBullseyeTouch(e) {
 }
 
 function getHexSegment(angle) {
-  // 6 segments, starting from anterior (-PI/2), each PI/3
+  // 6 segments — TEE rotated (anterior at 6 o'clock)
   const baseAngles = [
-    -Math.PI / 2,
-    -Math.PI / 2 + Math.PI / 3,
-    -Math.PI / 2 + 2 * Math.PI / 3,
     Math.PI / 2,
     Math.PI / 2 + Math.PI / 3,
-    Math.PI / 2 + 2 * Math.PI / 3
+    Math.PI / 2 + 2 * Math.PI / 3,
+    -Math.PI / 2,
+    -Math.PI / 2 + Math.PI / 3,
+    -Math.PI / 2 + 2 * Math.PI / 3
   ];
 
   for (let i = 0; i < 6; i++) {
@@ -2434,8 +2609,15 @@ function updateLegend() {
   const legend = document.getElementById('curvesLegend');
   legend.innerHTML = '';
 
-  // Show only a few representative segments
-  const showSegs = [0, 3, 6, 9, 12, 15, 16];
+  // Show segments relevant to current view
+  const viewSegs = getViewSegments(state.view);
+  const showSegs = [
+    viewSegs.basal[0], viewSegs.basal[1],
+    viewSegs.mid[0], viewSegs.mid[1],
+    viewSegs.apical[0], viewSegs.apical[1],
+    viewSegs.apex
+  ];
+
   showSegs.forEach(seg => {
     const div = document.createElement('div');
     div.className = 'legend-item';
