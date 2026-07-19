@@ -140,7 +140,8 @@ body {
 }
 
 .gls-display,
-.hr-display {
+.hr-display,
+.md-display {
   display: flex;
   align-items: baseline;
   gap: 10px;
@@ -150,11 +151,33 @@ body {
   border-radius: var(--radius-md);
 }
 
-.gls-label, .hr-label {
+.gls-label, .hr-label, .md-label {
   font-size: 0.9rem;
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.08em;
+  color: var(--text-secondary);
+}
+
+.md-value {
+  font-size: 1.5rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  color: var(--accent-blue);
+  transition: color var(--transition-smooth);
+}
+
+.md-value.abnormal {
+  color: var(--accent-red);
+}
+
+.md-value.borderline {
+  color: var(--accent-amber);
+}
+
+.md-unit {
+  font-size: 0.85rem;
+  font-weight: 600;
   color: var(--text-secondary);
 }
 
@@ -379,12 +402,13 @@ body {
   height: 10px;
   border-radius: 5px;
   background: linear-gradient(90deg,
-    #2563eb 0%,
-    #38bdf8 25%,
-    #34d399 40%,
-    #fbbf24 60%,
-    #f97316 75%,
-    #ef4444 100%
+    rgb(160, 15, 20) 0%,
+    rgb(210, 60, 55) 18%,
+    rgb(245, 160, 160) 35%,
+    rgb(255, 210, 215) 50%,
+    rgb(160, 185, 230) 65%,
+    rgb(80, 110, 220) 82%,
+    rgb(45, 60, 245) 100%
   );
 }
 
@@ -457,7 +481,7 @@ body {
 }
 
 .info-group {
-  flex: 1.5;
+  flex: 3;
 }
 
 .control-label {
@@ -596,9 +620,230 @@ body {
 }
 
 .info-card p {
-  font-size: 0.88rem;
+  font-size: 0.85rem;
   color: var(--text-secondary);
-  line-height: 1.55;
+  line-height: 1.45;
+}
+
+/* ============ Vote Toggle Button ============ */
+.vote-toggle-btn {
+  font-family: inherit;
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: #fff;
+  background: rgba(52, 211, 153, 0.2);
+  border: 1px solid rgba(52, 211, 153, 0.4);
+  padding: 10px 20px;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  white-space: nowrap;
+}
+.vote-toggle-btn:hover {
+  background: rgba(52, 211, 153, 0.35);
+  border-color: rgba(52, 211, 153, 0.6);
+  box-shadow: 0 0 16px rgba(52, 211, 153, 0.2);
+}
+
+/* ============ Vote Overlay ============ */
+.vote-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 10000;
+  background: rgba(8, 11, 20, 0.97);
+  backdrop-filter: blur(30px);
+  display: none;
+  flex-direction: column;
+  opacity: 0;
+  transition: opacity 0.35s ease;
+}
+.vote-overlay.active {
+  display: flex;
+  opacity: 1;
+}
+.vote-overlay-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 24px 48px;
+  border-bottom: 1px solid rgba(255,255,255,0.08);
+}
+.vote-overlay-header h1 {
+  font-size: 1.8rem;
+  font-weight: 800;
+  color: rgba(255,255,255,0.9);
+}
+.vote-close-btn {
+  font-family: inherit;
+  font-size: 1.4rem;
+  width: 44px;
+  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255,255,255,0.06);
+  border: 1px solid rgba(255,255,255,0.12);
+  border-radius: 50%;
+  color: rgba(255,255,255,0.6);
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.vote-close-btn:hover {
+  background: rgba(239,68,68,0.2);
+  border-color: rgba(239,68,68,0.4);
+  color: #ef4444;
+}
+.vote-overlay-body {
+  flex: 1;
+  display: flex;
+  padding: 48px;
+  gap: 64px;
+  overflow: hidden;
+}
+.vote-left {
+  width: 320px;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 20px;
+}
+.vote-left.centered {
+  width: 100%;
+  flex: 1;
+}
+.vote-reveal-btn {
+  font-family: inherit;
+  font-size: 1rem;
+  font-weight: 700;
+  color: #fff;
+  background: rgba(99, 149, 255, 0.2);
+  border: 1px solid rgba(99, 149, 255, 0.4);
+  padding: 10px 24px;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.vote-reveal-btn:hover {
+  background: rgba(99, 149, 255, 0.35);
+  border-color: rgba(99, 149, 255, 0.6);
+  box-shadow: 0 0 16px rgba(99, 149, 255, 0.2);
+}
+.vote-reveal-btn.active {
+  background: rgba(99, 149, 255, 0.35);
+  border-color: rgba(99, 149, 255, 0.6);
+}
+.vote-qr-title {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: rgba(255,255,255,0.7);
+}
+.vote-qr-box {
+  background: #fff;
+  padding: 16px;
+  border-radius: 16px;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+}
+.vote-qr-box img { display: block; border-radius: 4px; }
+.vote-url-text {
+  font-size: 0.75rem;
+  color: rgba(255,255,255,0.35);
+  word-break: break-all;
+  text-align: center;
+  font-family: 'SF Mono', 'Menlo', monospace;
+}
+.vote-total {
+  text-align: center;
+  color: rgba(255,255,255,0.5);
+  font-size: 0.95rem;
+}
+.vote-total strong {
+  display: block;
+  font-size: 2.8rem;
+  font-weight: 800;
+  color: #fff;
+  margin-top: 4px;
+}
+.vote-reset-btn {
+  font-family: inherit;
+  font-size: 0.85rem;
+  font-weight: 600;
+  padding: 8px 24px;
+  border-radius: 8px;
+  border: 1px solid rgba(255,255,255,0.12);
+  background: rgba(255,255,255,0.05);
+  color: rgba(255,255,255,0.5);
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.vote-reset-btn:hover {
+  background: rgba(239,68,68,0.15);
+  border-color: rgba(239,68,68,0.4);
+  color: #ef4444;
+}
+.vote-right {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+.vote-bars {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  max-width: 900px;
+}
+.vote-bar-row {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  height: 64px;
+}
+.vote-bar-label {
+  width: 50px;
+  font-size: 2rem;
+  font-weight: 800;
+  text-align: center;
+  flex-shrink: 0;
+}
+.vote-bar-track {
+  flex: 1;
+  height: 100%;
+  background: rgba(255,255,255,0.04);
+  border-radius: 14px;
+  overflow: hidden;
+}
+.vote-bar-fill {
+  height: 100%;
+  border-radius: 14px;
+  transition: width 0.6s cubic-bezier(0.22, 1, 0.36, 1);
+  min-width: 0;
+  position: relative;
+}
+.vote-bar-fill::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 14px;
+  background: linear-gradient(180deg, rgba(255,255,255,0.15) 0%, transparent 60%);
+}
+.vote-bar-count {
+  width: 80px;
+  font-size: 1.5rem;
+  font-weight: 700;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+  color: rgba(255,255,255,0.7);
+  flex-shrink: 0;
+}
+.vote-bar-pct {
+  width: 70px;
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: rgba(255,255,255,0.35);
+  font-variant-numeric: tabular-nums;
+  flex-shrink: 0;
 }
 
 /* ============ Responsive ============ */
@@ -619,34 +864,35 @@ body {
   .app-container {
     height: auto;
     max-height: none;
-    overflow: auto;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
   }
 
-  /* Header — compact */
+  /* Header — compact single row */
   .app-header {
-    padding: 10px 16px;
-    flex-wrap: wrap;
-    gap: 10px;
+    padding: 8px 12px;
+    gap: 8px;
   }
-  .app-header h1 { font-size: 1.15rem; }
-  .subtitle { font-size: 0.75rem; }
-  .logo-icon { width: 36px; height: 36px; }
-  .header-left { gap: 10px; }
-  .header-right { gap: 10px; }
+  .app-header h1 { font-size: 1rem; }
+  .subtitle { display: none; }
+  .logo-icon { width: 32px; height: 32px; }
+  .logo-icon svg { width: 22px; height: 22px; }
+  .header-left { gap: 8px; }
+  .header-right { gap: 8px; }
   .gls-display, .hr-display {
-    padding: 6px 12px;
-    gap: 6px;
+    padding: 5px 10px;
+    gap: 5px;
   }
-  .gls-value { font-size: 1.25rem; }
-  .hr-value { font-size: 1.15rem; }
-  .gls-label, .hr-label { font-size: 0.75rem; }
-  .hr-unit { font-size: 0.75rem; }
+  .gls-value { font-size: 1.15rem; }
+  .hr-value { font-size: 1rem; }
+  .gls-label, .hr-label { font-size: 0.7rem; }
+  .hr-unit { font-size: 0.7rem; }
 
-  /* Main — single column, scrollable */
+  /* Main — single column, no overflow hidden */
   .main-content {
     grid-template-columns: 1fr;
-    gap: 10px;
-    padding: 10px 12px;
+    gap: 8px;
+    padding: 8px;
     overflow: visible;
   }
 
@@ -655,102 +901,171 @@ body {
     border-radius: var(--radius-md);
   }
   .panel-header {
-    padding: 10px 14px;
-    flex-wrap: wrap;
-    gap: 8px;
+    padding: 8px 12px;
+    gap: 6px;
   }
-  .panel-header h2 { font-size: 0.95rem; }
-  .panel-badge { font-size: 0.75rem; padding: 3px 8px; }
+  .panel-header h2 { font-size: 0.85rem; }
+  .panel-badge { font-size: 0.7rem; padding: 2px 7px; }
 
-  /* Tabs */
+  /* Tabs — touch-friendly */
+  .view-tabs, .curve-tabs {
+    padding: 2px;
+  }
   .view-tab, .curve-tab {
-    font-size: 0.78rem;
-    padding: 5px 10px;
+    font-size: 0.75rem;
+    padding: 6px 12px;
+    min-height: 32px;
   }
 
-  /* LV Canvas */
+  /* LV Canvas — proportional */
   .canvas-container {
     padding: 4px;
   }
   #lvCanvas {
-    max-height: 320px;
+    max-height: 300px;
+    width: 100%;
   }
   .phase-indicator {
-    font-size: 0.8rem;
-    padding: 4px 10px;
-    top: 8px;
-    right: 8px;
+    font-size: 0.72rem;
+    padding: 3px 8px;
+    top: 6px;
+    right: 6px;
   }
-  .ecg-strip { height: 45px; }
+  .phase-dot { width: 6px; height: 6px; }
+  .ecg-strip { height: 40px; }
 
-  /* Bull's Eye */
+  /* Bull's Eye — adequate size for touch */
   .bullseye-container {
-    padding: 8px;
+    padding: 8px 4px;
   }
   #bullseyeCanvas {
-    max-height: 280px;
+    max-height: 300px;
+    max-width: 300px;
   }
   .segment-info {
-    padding: 8px 14px;
-    font-size: 0.85rem;
-    max-width: 280px;
+    padding: 6px 12px;
+    font-size: 0.8rem;
+    max-width: 260px;
+    margin-top: 4px;
   }
-  .color-scale { padding: 6px 16px 10px; }
-  .scale-labels { font-size: 0.75rem; }
+  .color-scale { padding: 4px 12px 8px; }
+  .scale-bar { height: 8px; }
+  .scale-labels { font-size: 0.7rem; margin-top: 4px; }
 
   /* Curves */
-  .curves-container { padding: 6px 8px; }
-  #curvesCanvas { max-height: 220px; }
-  .curves-legend {
-    gap: 6px;
-    padding: 8px 12px 10px;
-  }
-  .legend-item { font-size: 0.72rem; gap: 3px; }
-  .legend-dot { width: 8px; height: 3px; }
+  .curves-container { padding: 4px 6px; }
+  #curvesCanvas { max-height: 200px; }
+  .curves-legend { display: none; }
 
-  /* Controls Bar — stacked */
+  /* Controls Bar — mobile optimized grid */
   .controls-bar {
-    flex-direction: column;
-    gap: 12px;
-    padding: 12px 16px;
+    display: grid;
+    grid-template-columns: 1fr auto;
+    grid-template-rows: auto auto;
+    gap: 8px;
+    padding: 10px 12px;
+    position: sticky;
+    bottom: 0;
+    z-index: 20;
   }
-  .control-label { font-size: 0.75rem; }
+
+  .pathology-group {
+    grid-column: 1 / -1;
+    grid-row: 1;
+  }
+
+  .control-label { font-size: 0.7rem; }
+
   .pathology-selector {
-    gap: 5px;
+    gap: 4px;
+    flex-wrap: wrap;
   }
   .path-btn {
-    font-size: 0.78rem;
+    font-size: 0.72rem;
     padding: 6px 10px;
+    min-height: 34px;
   }
-  .slider { width: 120px; }
-  .slider-value { font-size: 0.85rem; }
-  .info-card { padding: 10px 14px; }
-  .info-card h3 { font-size: 0.9rem; }
-  .info-card p { font-size: 0.78rem; }
-  .play-btn, .reset-btn { width: 36px; height: 36px; }
+
+  /* HR + Playback side by side */
+  .hr-group {
+    grid-row: 2;
+    grid-column: 1;
+  }
+  .playback-group {
+    grid-row: 2;
+    grid-column: 2;
+    align-self: end;
+  }
+
+  .slider { width: 100px; height: 6px; }
+  .slider::-webkit-slider-thumb { width: 20px; height: 20px; }
+  .slider-value { font-size: 0.8rem; min-width: 44px; }
+  .info-card {
+    grid-column: 1 / -1;
+    padding: 8px 12px;
+  }
+  .info-card h3 { font-size: 0.8rem; }
+  .info-card p { font-size: 0.72rem; line-height: 1.4; }
+  .play-btn, .reset-btn {
+    width: 36px;
+    height: 36px;
+    min-width: 36px;
+  }
 }
 
 /* Extra small — phones in portrait */
 @media (max-width: 420px) {
-  html { font-size: 14px; }
+  html { font-size: 13px; }
   .app-header {
-    padding: 8px 12px;
+    padding: 6px 8px;
   }
   .header-right {
-    width: 100%;
-    justify-content: flex-end;
-  }
-  .main-content {
-    padding: 8px;
-    gap: 8px;
+    gap: 6px;
   }
   .gls-display, .hr-display {
-    padding: 5px 10px;
+    padding: 4px 8px;
   }
-  .gls-value { font-size: 1.1rem; }
+  .gls-value { font-size: 1rem; }
+  .hr-value { font-size: 0.9rem; }
+  .main-content {
+    padding: 6px;
+    gap: 6px;
+  }
+  #lvCanvas {
+    max-height: 260px;
+  }
+  #bullseyeCanvas {
+    max-height: 260px;
+    max-width: 260px;
+  }
   .path-btn {
-    font-size: 0.72rem;
-    padding: 5px 8px;
+    font-size: 0.65rem;
+    padding: 5px 7px;
+    min-height: 30px;
+  }
+  .slider { width: 80px; }
+  .controls-bar {
+    padding: 8px;
+    gap: 6px;
+  }
+}
+
+/* Landscape phones */
+@media (max-height: 500px) and (orientation: landscape) {
+  .main-content {
+    grid-template-columns: 1fr 1fr;
+    padding: 4px 8px;
+    gap: 4px;
+  }
+  .curves-panel {
+    grid-column: 1 / -1;
+  }
+  #lvCanvas { max-height: 200px; }
+  #bullseyeCanvas { max-height: 200px; max-width: 200px; }
+  #curvesCanvas { max-height: 140px; }
+  .ecg-strip { height: 30px; }
+  .controls-bar {
+    padding: 6px 12px;
   }
 }
 
@@ -779,7 +1094,7 @@ body {
   background: rgba(255, 255, 255, 0.25);
 }
 
-  </style>
+</style>
 </head>
 <body>
   <div class="app-container">
@@ -812,6 +1127,9 @@ body {
           <span class="hr-value" id="hrValue">72</span>
           <span class="hr-unit">bpm</span>
         </div>
+        <button class="vote-toggle-btn" id="voteToggle" onclick="toggleVoteOverlay()" title="Live Voting">
+          📊 Vote
+        </button>
       </div>
     </header>
 
@@ -868,9 +1186,7 @@ body {
         <div class="panel-header">
           <h2>Strain Curves</h2>
           <div class="curve-tabs">
-            <button class="curve-tab active" data-curve="longitudinal">Longitudinal</button>
-            <button class="curve-tab" data-curve="circumferential">Circumferential</button>
-            <button class="curve-tab" data-curve="radial">Radial</button>
+            <button class="curve-tab active" data-curve="longitudinal">Longitudinal Strain</button>
           </div>
         </div>
         <div class="curves-container">
@@ -929,9 +1245,35 @@ body {
     </footer>
   </div>
 
-  <script src="app.js"></script>
-</body>
-</html><script>
+  <!-- Voting Overlay -->
+  <div class="vote-overlay" id="voteOverlay">
+    <div class="vote-overlay-header">
+      <h1>📊 Live Voting</h1>
+      <div style="display:flex;gap:12px;align-items:center;">
+        <button class="vote-reveal-btn" id="voteRevealBtn" onclick="revealResults()">📈 결과 보기</button>
+        <button class="vote-close-btn" onclick="toggleVoteOverlay()">✕</button>
+      </div>
+    </div>
+    <div class="vote-overlay-body">
+      <div class="vote-left" id="voteLeftPanel">
+        <p class="vote-qr-title">Scan to Vote</p>
+        <div class="vote-qr-box">
+          <img id="voteQrImage" width="280" height="280" alt="QR Code">
+        </div>
+        <p class="vote-url-text" id="voteUrlText"></p>
+        <div class="vote-total">
+          <span>Total Responses</span>
+          <strong id="voteTotalCount">0</strong>
+        </div>
+        <button class="vote-reset-btn" onclick="resetVotesOverlay()">Reset</button>
+      </div>
+      <div class="vote-right" id="voteRightPanel" style="display:none;">
+        <div class="vote-bars" id="voteBars"></div>
+      </div>
+    </div>
+  </div>
+
+  <script>
 /* ============================================================
    LV Strain Simulator — Core Application Logic
    ============================================================ */
@@ -963,96 +1305,120 @@ const PATHOLOGIES = {
   normal: {
     name: 'Normal',
     nameKo: '정상',
-    description: '정상 좌심실 기능. GLS -18% ~ -22% 범위. 17개 분절에서 균일한 수축 패턴을 보입니다.',
-    strain: [-20, -21, -20, -19, -20, -21, -21, -22, -21, -20, -21, -22, -23, -22, -21, -22, -23],
+    description: '정상 좌심실 기능. GLS -18% ~ -22% (ASE/EACVI). Base→apex gradient 존재 (apex가 더 음수). 값은 벤더·소프트웨어 의존적.',
+    //                B-Ant  B-AS  B-IS  B-Inf B-IL  B-AL  M-Ant M-AS  M-IS  M-Inf M-IL  M-AL  A-Ant A-Sep A-Inf A-Lat Apex
+    strain:         [ -20,  -21,  -20,  -19,  -20,  -21,  -21,  -22,  -21,  -20,  -21,  -22,  -23,  -22,  -21,  -22,  -23],
     ef: 60,
-    wallMotion: Array(17).fill(1) // 1 = normal
+    wallMotion: Array(17).fill(1),
+    // Timing parameters (all zero = normal synchronous contraction)
+    eslAmplitude: Array(17).fill(0),
+    pssDelay:     Array(17).fill(0),
+    peakShift:    Array(17).fill(0)
   },
+
   anterior_mi: {
     name: 'Anterior MI',
     nameKo: '전벽 심근경색',
-    description: 'LAD 영역 허혈. 전벽 및 중격 분절에서 현저한 strain 감소. Apical akinesia/dyskinesia.',
-    strain: [-5, -6, -18, -19, -20, -8, -4, -5, -17, -18, -19, -7, -2, -3, -16, -5, 3],
+    description: 'LAD 영역 허혈 (anteroseptal 포함). 전벽·전중격·첨부에서 LS 현저 감소. ESL(수축기 초 신장) + PSS(수축 후 단축) + mechanical dispersion 관찰. Transmural 분절은 수축기 내내 양수 유지 후 IVR에 수동 recoil.',
+    //                B-Ant  B-AS  B-IS  B-Inf B-IL  B-AL  M-Ant M-AS  M-IS  M-Inf M-IL  M-AL  A-Ant A-Sep A-Inf A-Lat Apex
+    strain:         [ -12,    -8,  -14,  -19,  -21,  -14,   -8,   -7,  -13,  -19,  -20,  -12,   -5,   -5,  -16,   -8,    3],
+    pss:            [   1,    1,    0,    0,    0,    1,    1,    1,    0,    0,    0,    1,    1,    1,    0,    1,    1],
     ef: 35,
-    wallMotion: [0.2, 0.25, 1, 1, 1, 0.3, 0.15, 0.2, 0.9, 1, 1, 0.3, 0.05, 0.1, 0.85, 0.2, -0.1]
+    wallMotion:     [0.45, 0.30,  0.6,  1.0, 1.05, 0.55, 0.30, 0.25, 0.55, 1.00, 1.00, 0.45, 0.10, 0.12, 0.85, 0.25, -0.1],
+    // ESL: early systolic lengthening amplitude (% strain, 0=none)
+    //                B-Ant  B-AS  B-IS  B-Inf B-IL  B-AL  M-Ant M-AS  M-IS  M-Inf M-IL  M-AL  A-Ant A-Sep A-Inf A-Lat Apex
+    eslAmplitude:   [  3,    4,    0,    0,    0,    1,    5,    5,    0,    0,    0,    1,    7,    6,    0,    3,    8],
+    // PSS: post-systolic shortening delay (phase shift past AVC, 0=none)
+    pssDelay:       [0.06, 0.08, 0.00, 0.00, 0.00, 0.03, 0.10, 0.10, 0.00, 0.00, 0.00, 0.03, 0.13, 0.12, 0.00, 0.08, 0.15],
+    // Mechanical dispersion: time-to-peak shift (±phase units)
+    peakShift:      [0.02, 0.03, 0.00, 0.00, 0.00, 0.01, 0.04, 0.04, 0.00, 0.00, 0.00, 0.01, 0.06, 0.05, 0.00, 0.03, 0.07]
   },
+
   inferior_mi: {
     name: 'Inferior MI',
     nameKo: '하벽 심근경색',
-    description: 'RCA 영역 허혈. 하벽 및 하중격 분절에서 strain 감소. Base-to-apex gradient 소실.',
-    strain: [-20, -19, -8, -5, -9, -20, -21, -20, -7, -4, -8, -21, -22, -19, -6, -20, -21],
+    description: 'RCA(PDA) 영역 허혈. 하벽·하중격 LS 감소, 전벽 보존. ESL + PSS + mechanical dispersion 관찰. 결손 septal 확장→RCA, lateral 확장→LCx 시사.',
+    //                B-Ant  B-AS  B-IS  B-Inf B-IL  B-AL  M-Ant M-AS  M-IS  M-Inf M-IL  M-AL  A-Ant A-Sep A-Inf A-Lat Apex
+    strain:         [ -20,  -19,  -10,   -7,  -12,  -20,  -21,  -20,   -9,   -6,  -11,  -21,  -22,  -18,   -8,  -20,  -19],
+    circStrain:     [ -18,  -17,   -9,   -6,  -10,  -18,  -19,  -18,   -8,   -5,  -10,  -19,  -20,  -16,   -7,  -18,  -17],
+    radialStrain:   [  38,   36,   15,   10,   18,   38,   40,   38,   13,    8,   16,   40,   42,   32,   12,   38,   36],
+    pss:            [   0,    0,    1,    1,    1,    0,    0,    0,    1,    1,    1,    0,    0,    0,    1,    0,    0],
     ef: 42,
-    wallMotion: [1, 0.95, 0.3, 0.2, 0.35, 1, 1, 1, 0.3, 0.15, 0.3, 1, 1, 0.95, 0.25, 1, 1]
+    wallMotion:     [1.00, 0.95, 0.35, 0.20, 0.45, 1.00, 1.05, 1.00, 0.30, 0.15, 0.40, 1.05, 1.05, 0.90, 0.25, 1.00, 0.95],
+    eslAmplitude:   [  0,    0,    3,    5,    2,    0,    0,    0,    4,    6,    3,    0,    0,    0,    5,    0,    0],
+    pssDelay:       [0.00, 0.00, 0.08, 0.12, 0.06, 0.00, 0.00, 0.00, 0.10, 0.14, 0.07, 0.00, 0.00, 0.00, 0.12, 0.00, 0.00],
+    peakShift:      [0.00, 0.00, 0.03, 0.05, 0.02, 0.00, 0.00, 0.00, 0.04, 0.06, 0.03, 0.00, 0.00, 0.00, 0.05, 0.00, 0.00]
   },
+
   dcm: {
     name: 'DCM',
     nameKo: '확장성 심근병증',
-    description: '전반적 수축기능 저하. 모든 분절에서 균일한 strain 감소. 심실 확장 동반.',
-    strain: [-8, -9, -8, -7, -8, -9, -9, -10, -9, -8, -9, -10, -10, -10, -9, -10, -11],
-    ef: 25,
-    wallMotion: Array(17).fill(0.4)
+    description: '전반적 수축기능 저하. 모든 분절에서 GLS 균일하게 감소 (-9~-12%). 약한 ESL과 mild dispersion 관찰.',
+    //                B-Ant  B-AS  B-IS  B-Inf B-IL  B-AL  M-Ant M-AS  M-IS  M-Inf M-IL  M-AL  A-Ant A-Sep A-Inf A-Lat Apex
+    strain:         [  -9,  -10,   -9,   -8,   -9,  -10,  -10,  -11,  -10,   -9,  -10,  -11,  -11,  -11,  -10,  -11,  -12],
+    ef: 28,
+    wallMotion: Array(17).fill(0.4),
+    eslAmplitude:   [  1,    1,    1,    1,    1,    1,    1,    1,    1,    1,    1,    1,    2,    2,    1,    2,    2],
+    pssDelay:       Array(17).fill(0.02),
+    peakShift: [0.01, -0.01, 0.02, -0.02, 0.01, -0.01, 0.02, -0.01, 0.01, -0.02, 0.02, -0.01, 0.01, -0.02, 0.02, -0.01, 0.01]
   },
+
   hcm: {
     name: 'HCM',
     nameKo: '비후성 심근병증',
-    description: '비대칭 중격 비후. 중격 분절에서 strain 감소, 측벽은 보상적 증가. EF 보존.',
-    strain: [-15, -8, -7, -14, -18, -20, -16, -7, -6, -13, -19, -21, -18, -8, -14, -20, -19],
+    description: '비대칭 중격 비후. 중격 LS -5~-7% 현저 감소, 측벽 보존. GLS↓인데 EF 유지되는 전형적 EF-strain mismatch. 비대 분절에서 PSS 관찰.',
+    //                B-Ant  B-AS  B-IS  B-Inf B-IL  B-AL  M-Ant M-AS  M-IS  M-Inf M-IL  M-AL  A-Ant A-Sep A-Inf A-Lat Apex
+    strain:         [ -15,   -7,   -6,  -13,  -20,  -25,  -16,   -6,   -5,  -12,  -21,  -26,  -18,   -7,  -13,  -25,  -19],
+    pss:            [   0,    1,    1,    0,    0,    0,    0,    1,    1,    0,    0,    0,    0,    1,    0,    0,    0],
     ef: 65,
-    wallMotion: [0.7, 0.35, 0.3, 0.65, 0.9, 1, 0.75, 0.3, 0.25, 0.6, 0.95, 1.05, 0.85, 0.35, 0.65, 1, 0.9]
+    wallMotion:     [0.70, 0.30, 0.25, 0.60, 1.00, 1.25, 0.75, 0.25, 0.20, 0.55, 1.05, 1.30, 0.85, 0.30, 0.60, 1.25, 0.90],
+    // HCM: no ESL (hypertrophy ≠ ischemia), PSS in hypertrophied segments only, mild dispersion
+    eslAmplitude:   Array(17).fill(0),
+    pssDelay:       [0.00, 0.06, 0.07, 0.00, 0.00, 0.00, 0.00, 0.07, 0.08, 0.00, 0.00, 0.00, 0.00, 0.06, 0.00, 0.00, 0.00],
+    peakShift:      [0.00, 0.02, 0.02, 0.00, 0.00, 0.00, 0.00, 0.02, 0.03, 0.00, 0.00, 0.00, 0.00, 0.02, 0.00, 0.00, 0.00]
   },
+
   takotsubo: {
     name: 'Takotsubo',
     nameKo: '타코츠보 심근병증',
-    description: '심첨부 풍선 현상. Apical akinesia와 basal hyperkinesia가 특징적. 스트레스성 심근병증.',
-    strain: [-25, -26, -25, -24, -25, -26, -20, -19, -19, -18, -19, -20, -3, -4, -4, -3, 5],
+    description: '심첨부 풍선 (급성기). Apical LS -3~-7%, basal 과운동. 원형 분포 — MI와 감별점. 첨부에서 ESL + PSS 관찰. Dispersion은 MI와 다르게 territory 산발이 아닌 base-apex timing gradient (basal 정상 vs apical 지연).',
+    //                B-Ant  B-AS  B-IS  B-Inf B-IL  B-AL  M-Ant M-AS  M-IS  M-Inf M-IL  M-AL  A-Ant A-Sep A-Inf A-Lat Apex
+    strain:         [ -25,  -27,  -26,  -24,  -25,  -27,  -10,   -9,   -9,   -8,   -9,  -10,   -3,   -4,   -4,   -3,    5],
+    pss:            [   0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    1,    1,    1,    1,    1],
     ef: 38,
-    wallMotion: [1.3, 1.35, 1.3, 1.25, 1.3, 1.35, 1, 0.95, 0.95, 0.9, 0.95, 1, 0.1, 0.15, 0.15, 0.1, -0.15]
+    wallMotion:     [1.30, 1.40, 1.35, 1.25, 1.30, 1.40, 0.40, 0.35, 0.35, 0.30, 0.35, 0.40, 0.08, 0.10, 0.10, 0.08, -0.15],
+    eslAmplitude:   [  0,    0,    0,    0,    0,    0,    3,    3,    3,    4,    3,    3,    7,    7,    7,    7,    9],
+    pssDelay:       [0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.05, 0.05, 0.05, 0.06, 0.05, 0.05, 0.13, 0.13, 0.13, 0.13, 0.15],
+    peakShift:      [0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.03, 0.03, 0.03, 0.04, 0.03, 0.03, 0.06, 0.06, 0.06, 0.06, 0.07]
   }
 };
 
 // ─── Color Utilities ────────────────────────────────────────
 function strainToColor(strain) {
-  // Map strain value to color
-  // Normal: ~-20% (blue), Mild: ~-15% (cyan), Reduced: ~-10% (yellow), Severe: ~-5% (orange), Dyskinetic: >0% (red)
+  // Diverging Red → Light/White → Blue colormap (standard echo vendor style)
+  // Deep red = excellent contraction (-25%)
+  // Light pink/white = midrange (~-12%)
+  // Deep blue = akinetic/dyskinetic (0% ~ +10%)
   const s = Math.max(-25, Math.min(10, strain));
   let r, g, b;
 
-  if (s <= -20) {
-    // Deep blue
-    const t = (s + 25) / 5;
-    r = Math.round(20 + t * 17);
-    g = Math.round(60 + t * 39);
-    b = Math.round(180 + t * 55);
-  } else if (s <= -15) {
-    // Blue to cyan
-    const t = (s + 20) / 5;
-    r = Math.round(37 + t * 19);
-    g = Math.round(99 + t * 90);
-    b = Math.round(235 - t * 10);
-  } else if (s <= -10) {
-    // Cyan to green
-    const t = (s + 15) / 5;
-    r = Math.round(56 + t * 0);
-    g = Math.round(189 + t * 22);
-    b = Math.round(225 - t * 72);
-  } else if (s <= -5) {
-    // Green to yellow
-    const t = (s + 10) / 5;
-    r = Math.round(56 + t * 195);
-    g = Math.round(211 - t * 20);
-    b = Math.round(153 - t * 117);
-  } else if (s <= 0) {
-    // Yellow to orange
-    const t = (s + 5) / 5;
-    r = Math.round(251 - t * 2);
-    g = Math.round(191 - t * 62);
-    b = Math.round(36 + t * 0);
+  // Midpoint of the diverging scale
+  const mid = -12;
+
+  if (s <= mid) {
+    // RED side: deep red (-25) → light pink/white (mid)
+    const t = (s - (-25)) / (mid - (-25)); // 0 at -25, 1 at mid
+    // Deep red → light pink
+    r = Math.round(160 + t * 95);   // 160 → 255
+    g = Math.round(15  + t * 195);  // 15  → 210
+    b = Math.round(20  + t * 195);  // 20  → 215
   } else {
-    // Orange to red
-    const t = Math.min(s / 10, 1);
-    r = Math.round(249 - t * 10);
-    g = Math.round(129 - t * 79);
-    b = Math.round(36 - t * 36);
+    // BLUE side: light pink/white (mid) → deep blue (+10)
+    const t = (s - mid) / (10 - mid); // 0 at mid, 1 at +10
+    // Light pink → deep blue
+    r = Math.round(255 - t * 210);  // 255 → 45
+    g = Math.round(210 - t * 150);  // 210 → 60
+    b = Math.round(215 + t * 30);   // 215 → 245
   }
 
   return `rgb(${r}, ${g}, ${b})`;
@@ -1211,20 +1577,17 @@ function generateStrainCurves() {
   const curves = {};
 
   for (let seg = 0; seg < 17; seg++) {
-    const peakStrain = p.strain[seg];
     const points = [];
+    const timing = {
+      esl:       (p.eslAmplitude && p.eslAmplitude[seg]) || 0,
+      pssDelay:  (p.pssDelay && p.pssDelay[seg]) || 0,
+      peakShift: (p.peakShift && p.peakShift[seg]) || 0,
+      hasPSS:    p.pss && p.pss[seg]
+    };
 
     for (let t = 0; t <= 100; t++) {
       const phase = t / 100;
-      let val;
-
-      if (state.curveType === 'longitudinal') {
-        val = computeLongitudinalStrain(phase, peakStrain, p.wallMotion[seg]);
-      } else if (state.curveType === 'circumferential') {
-        val = computeLongitudinalStrain(phase, peakStrain * 0.55, p.wallMotion[seg]);
-      } else {
-        val = computeRadialStrain(phase, -peakStrain * 1.8, p.wallMotion[seg]);
-      }
+      const val = computeStrainWithTiming(phase, p.strain[seg], p.wallMotion[seg], timing);
       points.push(val);
     }
     curves[seg] = points;
@@ -1234,41 +1597,112 @@ function generateStrainCurves() {
   updateLegend();
 }
 
-function computeLongitudinalStrain(phase, peak, wallMotion) {
-  // Simulate strain curve: 0 at phase 0, peak at ~0.35 (end-systole), return toward 0
+// ─── Unified Strain Engine with ESL + PSS + Dispersion ──────
+function computeStrainWithTiming(phase, peak, wallMotion, timing) {
+  const { esl, pssDelay, peakShift, hasPSS } = timing;
+  const AVC = 0.35 + peakShift;  // Mechanical dispersion shifts AVC per-segment
+
+  // For transmural infarct (dyskinetic, peak > 0): special handling
+  const isTransmural = peak > 0;
   let val;
-  if (phase < 0.08) {
-    // IVC - slight positive
-    val = phase / 0.08 * 2 * wallMotion;
-  } else if (phase < 0.35) {
-    // Systolic shortening
-    const t = (phase - 0.08) / 0.27;
-    val = 2 * wallMotion + (peak - 2) * Math.sin(t * Math.PI / 2) * wallMotion;
-  } else if (phase < 0.45) {
-    // IVR
-    const t = (phase - 0.35) / 0.1;
-    val = peak * wallMotion * (1 - t * 0.1);
-  } else if (phase < 0.7) {
-    // Early diastole - rapid relaxation
-    const t = (phase - 0.45) / 0.25;
-    val = peak * wallMotion * 0.9 * (1 - t * 0.7);
+
+  if (phase < 0.06) {
+    // ── IVC (isovolumic contraction) ──
+    if (esl > 0) {
+      // ESL: early systolic lengthening — segment stretches instead of contracting
+      val = phase / 0.06 * esl;
+    } else {
+      val = phase / 0.06 * 1.5 * wallMotion;
+    }
+
+  } else if (phase < AVC) {
+    // ── Systolic phase ──
+    const sysDuration = AVC - 0.06;
+    const t = (phase - 0.06) / sysDuration;
+
+    if (isTransmural) {
+      // Transmural infarct: stretches throughout systole (stays positive)
+      // ESL peak → continues positive → slight additional stretch
+      const eslPeak = Math.max(esl, peak * 1.2);
+      val = eslPeak * (0.7 + 0.3 * Math.sin(t * Math.PI));  // stays positive, peaks mid-systole
+    } else if (esl > 0) {
+      // Ischemic but not transmural: ESL hump then incomplete shortening
+      if (t < 0.25) {
+        // ESL hump persists into early systole
+        const eslDecay = 1 - t / 0.25;
+        const shorteningOnset = t / 0.25;
+        val = esl * eslDecay * 0.6 + (peak * 0.55 * shorteningOnset) * Math.sin(shorteningOnset * Math.PI / 2);
+      } else {
+        // Incomplete systolic shortening (only reaches 50-65% of peak)
+        const sysT = (t - 0.25) / 0.75;
+        const incompleteFraction = 0.5 + 0.15 * (1 - esl / 10);
+        val = peak * incompleteFraction * Math.sin(sysT * Math.PI / 2);
+      }
+    } else {
+      // Normal contraction: smooth sine to peak at AVC
+      val = 1.5 * wallMotion + (peak - 1.5) * Math.sin(t * Math.PI / 2) * wallMotion;
+    }
+
+  } else if (hasPSS && pssDelay > 0 && phase < AVC + pssDelay) {
+    // ── PSS zone: continued shortening past AVC ──
+    const t = (phase - AVC) / pssDelay;
+
+    if (isTransmural) {
+      // Transmural: passive recoil after systolic stretch
+      // LV pressure drops during IVR → passive shortening (negative recoil)
+      const stretchEnd = peak * 0.8;  // value at end of systole
+      const recoilTarget = peak * -0.3; // passive recoil goes slightly negative
+      val = stretchEnd + (recoilTarget - stretchEnd) * Math.sin(t * Math.PI / 2);
+    } else if (esl > 0) {
+      // Ischemic PSS: reaches full nadir only now (the defining signature)
+      const sysEndVal = peak * (0.5 + 0.15 * (1 - esl / 10));
+      val = sysEndVal + (peak - sysEndVal) * Math.sin(t * Math.PI / 2);
+    } else {
+      // PSS without ESL (e.g., HCM): continues past AVC
+      const sysEndVal = peak * wallMotion * 0.6;
+      val = sysEndVal + (peak * wallMotion - sysEndVal) * Math.sin(t * Math.PI / 2);
+    }
+
   } else {
-    // Late diastole - return to baseline
-    const t = (phase - 0.7) / 0.3;
-    val = peak * wallMotion * 0.27 * (1 - t);
+    // ── Diastolic relaxation ──
+    const relaxStart = hasPSS && pssDelay > 0 ? AVC + pssDelay : AVC;
+    const nadirVal = hasPSS && pssDelay > 0
+      ? (isTransmural ? peak * -0.3 : peak * (esl > 0 ? 1 : wallMotion))
+      : (esl > 0 ? peak * (0.5 + 0.15 * (1 - esl / 10)) : peak * wallMotion);
+
+    if (phase < relaxStart + 0.08) {
+      // IVR / early rapid relaxation
+      const t = (phase - relaxStart) / 0.08;
+      val = nadirVal * (1 - t * 0.15);
+    } else if (phase < 0.7) {
+      // Early diastole — rapid relaxation toward baseline
+      const earlyStart = relaxStart + 0.08;
+      const t = Math.min(1, (phase - earlyStart) / (0.7 - earlyStart));
+      val = nadirVal * 0.85 * (1 - t * 0.75);
+    } else {
+      // Late diastole — return to baseline
+      const t = (phase - 0.7) / 0.3;
+      const remainVal = nadirVal * 0.85 * 0.25;
+      val = remainVal * (1 - t);
+    }
   }
+
   return val;
 }
 
-function computeRadialStrain(phase, peak, wallMotion) {
+// ─── Radial Strain (inverted, positive peak) ─────────────────
+function computeRadialStrain(phase, peak, wallMotion, timing) {
+  const peakShift = timing ? timing.peakShift : 0;
+  const AVC = 0.35 + peakShift;
   let val;
-  if (phase < 0.08) {
-    val = -phase / 0.08 * 3 * wallMotion;
-  } else if (phase < 0.35) {
-    const t = (phase - 0.08) / 0.27;
-    val = -3 * wallMotion + (peak + 3) * Math.sin(t * Math.PI / 2) * wallMotion;
+
+  if (phase < 0.06) {
+    val = -phase / 0.06 * 2 * wallMotion;
+  } else if (phase < AVC) {
+    const t = (phase - 0.06) / (AVC - 0.06);
+    val = -2 * wallMotion + (peak + 2) * Math.sin(t * Math.PI / 2) * wallMotion;
   } else if (phase < 0.45) {
-    const t = (phase - 0.35) / 0.1;
+    const t = (phase - AVC) / (0.45 - AVC);
     val = peak * wallMotion * (1 - t * 0.1);
   } else if (phase < 0.7) {
     const t = (phase - 0.45) / 0.25;
@@ -1708,27 +2142,31 @@ function getContractionFactor(phase) {
 }
 
 function getViewSegments(view) {
-  // Return pairs of [leftSeg, rightSeg] — TEE orientation (mirrored from TTE)
+  // Return pairs of [leftSeg, rightSeg] — TEE orientation
+  // Left side = Septal side, Right side = Lateral side
   switch (view) {
     case 'a4c':
+      // ME 4C: Septal (left) / Lateral (right)
       return {
-        basal: [3, 5],    // inferoseptal(left/septal), anterolateral(right/lateral)
-        mid: [9, 11],     // mid inferoseptal(left), mid anterolateral(right)
-        apical: [13, 15], // apical septal(left), apical lateral(right)
+        basal: [2, 5],    // B-Inferoseptal(left), B-Anterolateral(right)
+        mid: [8, 11],     // M-Inferoseptal(left), M-Anterolateral(right)
+        apical: [13, 15], // A-Septal(left), A-Lateral(right)
         apex: 16
       };
     case 'a2c':
+      // ME 2C: Inferior (left) / Anterior (right)
       return {
-        basal: [4, 0],    // inferior(left), anterior(right)
-        mid: [10, 6],     // mid inferior(left), mid anterior(right)
-        apical: [14, 12], // apical inferior(left), apical anterior(right)
+        basal: [3, 0],    // B-Inferior(left), B-Anterior(right)
+        mid: [9, 6],      // M-Inferior(left), M-Anterior(right)
+        apical: [14, 12], // A-Inferior(left), A-Anterior(right)
         apex: 16
       };
     case 'aplax':
+      // ME LAX: Inferolateral (left) / Anteroseptal (right)
       return {
-        basal: [5, 1],    // inferolateral(left), anteroseptal(right)
-        mid: [11, 7],     // mid inferolateral(left), mid anteroseptal(right)
-        apical: [15, 13], // apical lateral(left), apical septal(right)
+        basal: [4, 1],    // B-Inferolateral(left), B-Anteroseptal(right)
+        mid: [10, 7],     // M-Inferolateral(left), M-Anteroseptal(right)
+        apical: [15, 13], // A-Lateral(left), A-Septal(right)
         apex: 16
       };
   }
@@ -2003,27 +2441,31 @@ function getContractionFactor(phase) {
 }
 
 function getViewSegments(view) {
-  // Return pairs of [leftSeg, rightSeg] for basal, mid, apical
+  // Return pairs of [leftSeg, rightSeg] — TEE orientation
+  // Left side = Septal side, Right side = Lateral side
   switch (view) {
     case 'a4c':
+      // ME 4C: Septal (left) / Lateral (right)
       return {
-        basal: [5, 3],    // anterolateral, inferoseptal
-        mid: [11, 9],     // mid anterolateral, mid inferoseptal
-        apical: [15, 13], // apical inferior→lateral, apical anterior→septal
-        apex: 16          // apex
+        basal: [2, 5],    // B-Inferoseptal(left), B-Anterolateral(right)
+        mid: [8, 11],     // M-Inferoseptal(left), M-Anterolateral(right)
+        apical: [13, 15], // A-Septal(left), A-Lateral(right)
+        apex: 16
       };
     case 'a2c':
+      // ME 2C: Inferior (left) / Anterior (right)
       return {
-        basal: [0, 4],
-        mid: [6, 10],
-        apical: [12, 14],
+        basal: [3, 0],    // B-Inferior(left), B-Anterior(right)
+        mid: [9, 6],      // M-Inferior(left), M-Anterior(right)
+        apical: [14, 12], // A-Inferior(left), A-Anterior(right)
         apex: 16
       };
     case 'aplax':
+      // ME LAX: Inferolateral (left) / Anteroseptal (right)
       return {
-        basal: [1, 5],
-        mid: [7, 11],
-        apical: [13, 15],
+        basal: [4, 1],    // B-Inferolateral(left), B-Anteroseptal(right)
+        mid: [10, 7],     // M-Inferolateral(left), M-Anteroseptal(right)
+        apical: [15, 13], // A-Lateral(left), A-Septal(right)
         apex: 16
       };
   }
@@ -2249,15 +2691,15 @@ function drawBullsEye() {
     { inner: 0, outer: maxR * 0.12, count: 1, startSeg: 16 }          // Apex
   ];
 
-  // AHA segment angular offsets — TEE orientation (rotated 180° from standard)
-  // Anterior at 6 o'clock, Inferior at 12 o'clock
+  // AHA standard 17-segment bull's eye (counter-clockwise from ANT)
+  // SEPT on LEFT (9 o'clock), LAT on RIGHT (3 o'clock)
   const baseAngles = [
-    Math.PI / 2,                   // Anterior (6 o'clock)
-    Math.PI / 2 + Math.PI / 3,    // Anteroseptal
-    Math.PI / 2 + 2 * Math.PI / 3, // Inferoseptal
-    -Math.PI / 2,                  // Inferior (12 o'clock)
-    -Math.PI / 2 + Math.PI / 3,   // Inferolateral
-    -Math.PI / 2 + 2 * Math.PI / 3 // Anterolateral
+    -Math.PI / 2,                    // Anterior (12 o'clock)
+    -Math.PI / 2 - Math.PI / 3,     // Anteroseptal (10 o'clock)
+    -Math.PI / 2 - 2 * Math.PI / 3, // Inferoseptal (8 o'clock)
+    Math.PI / 2,                     // Inferior (6 o'clock)
+    Math.PI / 2 - Math.PI / 3,      // Inferolateral (4 o'clock)
+    Math.PI / 2 - 2 * Math.PI / 3   // Anterolateral (2 o'clock)
   ];
 
   rings.forEach((ring, ri) => {
@@ -2273,8 +2715,8 @@ function drawBullsEye() {
         startAngle = baseAngles[i] - segAngle / 2;
         endAngle = baseAngles[i] + segAngle / 2;
       } else if (ring.count === 4) {
-        // Apical: TEE rotated 180°
-        const apicalAngles = [Math.PI / 2, Math.PI, -Math.PI / 2, 0];
+        // Apical: Ant(12), Sept(9/LEFT), Inf(6), Lat(3/RIGHT)
+        const apicalAngles = [-Math.PI / 2, Math.PI, Math.PI / 2, 0];
         startAngle = apicalAngles[i] - Math.PI / 4;
         endAngle = apicalAngles[i] + Math.PI / 4;
       } else {
@@ -2339,8 +2781,8 @@ function drawBullsEye() {
   bullseyeCtx.font = 'bold 13px Inter';
   bullseyeCtx.fillStyle = 'rgba(192, 200, 220, 0.7)';
   bullseyeCtx.textAlign = 'center';
-  bullseyeCtx.fillText('INF', cx, cy - maxR - 10);
-  bullseyeCtx.fillText('ANT', cx, cy + maxR + 16);
+  bullseyeCtx.fillText('ANT', cx, cy - maxR - 10);
+  bullseyeCtx.fillText('INF', cx, cy + maxR + 16);
   bullseyeCtx.textAlign = 'right';
   bullseyeCtx.fillText('SEPT', cx - maxR - 8, cy + 4);
   bullseyeCtx.textAlign = 'left';
@@ -2367,8 +2809,8 @@ function handleBullseyeHover(e) {
   if (dist <= maxR * 0.12) {
     segIdx = 16; // Apex
   } else if (dist <= maxR * 0.32) {
-    // Apical (4 segments) — TEE rotated
-    const apicalAngles = [Math.PI / 2, Math.PI, -Math.PI / 2, 0];
+    // Apical: Ant(12), Sept(9/LEFT), Inf(6), Lat(3/RIGHT)
+    const apicalAngles = [-Math.PI / 2, Math.PI, Math.PI / 2, 0];
     for (let i = 0; i < 4; i++) {
       let start = apicalAngles[i] - Math.PI / 4;
       let end = apicalAngles[i] + Math.PI / 4;
@@ -2427,7 +2869,7 @@ function handleBullseyeTouch(e) {
     if (dist <= maxR * 0.12) {
       segIdx = 16;
     } else if (dist <= maxR * 0.32) {
-      const apicalAngles = [Math.PI / 2, Math.PI, -Math.PI / 2, 0];
+      const apicalAngles = [-Math.PI / 2, Math.PI, Math.PI / 2, 0];
       for (let i = 0; i < 4; i++) {
         if (angleInRange(angle, apicalAngles[i] - Math.PI / 4, apicalAngles[i] + Math.PI / 4)) {
           segIdx = 12 + i;
@@ -2454,14 +2896,14 @@ function handleBullseyeTouch(e) {
 }
 
 function getHexSegment(angle) {
-  // 6 segments — TEE rotated (anterior at 6 o'clock)
+  // 6 segments — AHA counter-clockwise (SEPT left, LAT right)
   const baseAngles = [
-    Math.PI / 2,
-    Math.PI / 2 + Math.PI / 3,
-    Math.PI / 2 + 2 * Math.PI / 3,
     -Math.PI / 2,
-    -Math.PI / 2 + Math.PI / 3,
-    -Math.PI / 2 + 2 * Math.PI / 3
+    -Math.PI / 2 - Math.PI / 3,
+    -Math.PI / 2 - 2 * Math.PI / 3,
+    Math.PI / 2,
+    Math.PI / 2 - Math.PI / 3,
+    Math.PI / 2 - 2 * Math.PI / 3
   ];
 
   for (let i = 0; i < 6; i++) {
@@ -2507,15 +2949,9 @@ function drawStrainCurves() {
   const plotW = w - margin.left - margin.right;
   const plotH = h - margin.top - margin.bottom;
 
-  // Determine Y range
-  let minY, maxY;
-  if (state.curveType === 'radial') {
-    minY = -10;
-    maxY = 60;
-  } else {
-    minY = -30;
-    maxY = 15;
-  }
+  // Y range for longitudinal strain
+  const minY = -30;
+  const maxY = 15;
 
   // Grid & axes
   curvesCtx.strokeStyle = 'rgba(255, 255, 255, 0.06)';
@@ -2601,8 +3037,7 @@ function drawStrainCurves() {
   curvesCtx.font = 'bold 14px Inter';
   curvesCtx.fillStyle = 'rgba(192, 200, 220, 0.7)';
   curvesCtx.textAlign = 'left';
-  const titles = { longitudinal: 'Longitudinal Strain (%)', circumferential: 'Circumferential Strain (%)', radial: 'Radial Strain (%)' };
-  curvesCtx.fillText(titles[state.curveType], margin.left, margin.top - 6);
+  curvesCtx.fillText('Longitudinal Strain (%)', margin.left, margin.top - 6);
 }
 
 function updateLegend() {
@@ -2706,6 +3141,115 @@ function ecgWaveform(phase) {
     return -Math.sin(t * Math.PI) * 0.3;
   } else {
     return 0;
+  }
+}
+
+// ─── Voting Overlay ──────────────────────────────────────────
+const VOTE_COLORS = ['#6395ff', '#34d399', '#fbbf24', '#f97316', '#ef4444'];
+const VOTE_BG = ['rgba(99,149,255,0.25)', 'rgba(52,211,153,0.25)', 'rgba(251,191,36,0.25)', 'rgba(249,115,22,0.25)', 'rgba(239,68,68,0.25)'];
+let votePollingId = null;
+let voteInitialized = false;
+
+function initVoteBars() {
+  const barsEl = document.getElementById('voteBars');
+  if (!barsEl || barsEl.children.length > 0) return;
+  for (let i = 1; i <= 5; i++) {
+    const row = document.createElement('div');
+    row.className = 'vote-bar-row';
+    row.innerHTML = `
+      <span class="vote-bar-label" style="color: ${VOTE_COLORS[i-1]}">${i}</span>
+      <div class="vote-bar-track">
+        <div class="vote-bar-fill" id="vFill${i}" style="width: 0%; background: ${VOTE_BG[i-1]}; box-shadow: 0 0 20px ${VOTE_BG[i-1]};"></div>
+      </div>
+      <span class="vote-bar-count" id="vCount${i}">0</span>
+      <span class="vote-bar-pct" id="vPct${i}">0%</span>
+    `;
+    barsEl.appendChild(row);
+  }
+}
+
+function initVoteQR() {
+  // Get vote URL from the voting server's config endpoint
+  fetch('http://localhost:9000/api/config').then(r => r.json()).then(data => {
+    setVoteUrl(data.voteUrl);
+  }).catch(() => {
+    setVoteUrl('http://localhost:9000/vote');
+  });
+}
+
+function setVoteUrl(url) {
+  const img = document.getElementById('voteQrImage');
+  if (img) img.src = 'https://api.qrserver.com/v1/create-qr-code/?size=240x240&data=' + encodeURIComponent(url);
+  const txt = document.getElementById('voteUrlText');
+  if (txt) txt.textContent = url;
+}
+
+async function pollVotes() {
+  try {
+    const res = await fetch('http://localhost:9000/api/results');
+    const data = await res.json();
+    const total = Object.values(data).reduce((a, b) => a + b, 0);
+    const el = document.getElementById('voteTotalCount');
+    if (el) el.textContent = total;
+    for (let i = 1; i <= 5; i++) {
+      const count = data[String(i)] || 0;
+      const pct = total > 0 ? (count / total * 100) : 0;
+      const fill = document.getElementById('vFill' + i);
+      const cnt = document.getElementById('vCount' + i);
+      const pctEl = document.getElementById('vPct' + i);
+      if (fill) fill.style.width = pct + '%';
+      if (cnt) cnt.textContent = count;
+      if (pctEl) pctEl.textContent = Math.round(pct) + '%';
+    }
+  } catch(e) {}
+}
+
+async function resetVotesOverlay() {
+  try { await fetch('http://localhost:9000/api/reset', { method: 'POST' }); } catch(e) {}
+  pollVotes();
+}
+
+function toggleVoteOverlay() {
+  const overlay = document.getElementById('voteOverlay');
+  if (!overlay) return;
+  const isActive = overlay.classList.contains('active');
+  if (isActive) {
+    overlay.classList.remove('active');
+    if (votePollingId) { clearInterval(votePollingId); votePollingId = null; }
+  } else {
+    if (!voteInitialized) {
+      initVoteBars();
+      initVoteQR();
+      voteInitialized = true;
+    }
+    // Reset to QR-only state
+    const left = document.getElementById('voteLeftPanel');
+    const right = document.getElementById('voteRightPanel');
+    const btn = document.getElementById('voteRevealBtn');
+    if (left) left.classList.add('centered');
+    if (right) right.style.display = 'none';
+    if (btn) { btn.classList.remove('active'); btn.textContent = '📈 결과 보기'; }
+    
+    overlay.classList.add('active');
+    pollVotes();
+    votePollingId = setInterval(pollVotes, 800);
+  }
+}
+
+function revealResults() {
+  const left = document.getElementById('voteLeftPanel');
+  const right = document.getElementById('voteRightPanel');
+  const btn = document.getElementById('voteRevealBtn');
+  if (!right) return;
+  const isHidden = right.style.display === 'none';
+  if (isHidden) {
+    if (left) left.classList.remove('centered');
+    right.style.display = 'flex';
+    if (btn) { btn.classList.add('active'); btn.textContent = '📊 QR만 보기'; }
+  } else {
+    if (left) left.classList.add('centered');
+    right.style.display = 'none';
+    if (btn) { btn.classList.remove('active'); btn.textContent = '📈 결과 보기'; }
   }
 }
 
