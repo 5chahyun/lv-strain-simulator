@@ -3,6 +3,9 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+  <meta http-equiv="Pragma" content="no-cache" />
+  <meta http-equiv="Expires" content="0" />
   <title>LV Strain Simulator — 좌심실 변형 시뮬레이션</title>
   <meta name="description" content="Interactive Left Ventricular Strain simulation for echocardiography education. Visualize GLS, bull's eye plots, and strain curves." />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet" />
@@ -625,226 +628,7 @@ body {
   line-height: 1.45;
 }
 
-/* ============ Vote Toggle Button ============ */
-.vote-toggle-btn {
-  font-family: inherit;
-  font-size: 0.95rem;
-  font-weight: 700;
-  color: #fff;
-  background: rgba(52, 211, 153, 0.2);
-  border: 1px solid rgba(52, 211, 153, 0.4);
-  padding: 10px 20px;
-  border-radius: var(--radius-md);
-  cursor: pointer;
-  transition: all var(--transition-fast);
-  white-space: nowrap;
-}
-.vote-toggle-btn:hover {
-  background: rgba(52, 211, 153, 0.35);
-  border-color: rgba(52, 211, 153, 0.6);
-  box-shadow: 0 0 16px rgba(52, 211, 153, 0.2);
-}
 
-/* ============ Vote Overlay ============ */
-.vote-overlay {
-  position: fixed;
-  inset: 0;
-  z-index: 10000;
-  background: rgba(8, 11, 20, 0.97);
-  backdrop-filter: blur(30px);
-  display: none;
-  flex-direction: column;
-  opacity: 0;
-  transition: opacity 0.35s ease;
-}
-.vote-overlay.active {
-  display: flex;
-  opacity: 1;
-}
-.vote-overlay-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 24px 48px;
-  border-bottom: 1px solid rgba(255,255,255,0.08);
-}
-.vote-overlay-header h1 {
-  font-size: 1.8rem;
-  font-weight: 800;
-  color: rgba(255,255,255,0.9);
-}
-.vote-close-btn {
-  font-family: inherit;
-  font-size: 1.4rem;
-  width: 44px;
-  height: 44px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: rgba(255,255,255,0.06);
-  border: 1px solid rgba(255,255,255,0.12);
-  border-radius: 50%;
-  color: rgba(255,255,255,0.6);
-  cursor: pointer;
-  transition: all 0.2s;
-}
-.vote-close-btn:hover {
-  background: rgba(239,68,68,0.2);
-  border-color: rgba(239,68,68,0.4);
-  color: #ef4444;
-}
-.vote-overlay-body {
-  flex: 1;
-  display: flex;
-  padding: 48px;
-  gap: 64px;
-  overflow: hidden;
-}
-.vote-left {
-  width: 320px;
-  flex-shrink: 0;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 20px;
-}
-.vote-left.centered {
-  width: 100%;
-  flex: 1;
-}
-.vote-reveal-btn {
-  font-family: inherit;
-  font-size: 1rem;
-  font-weight: 700;
-  color: #fff;
-  background: rgba(99, 149, 255, 0.2);
-  border: 1px solid rgba(99, 149, 255, 0.4);
-  padding: 10px 24px;
-  border-radius: 10px;
-  cursor: pointer;
-  transition: all 0.2s;
-}
-.vote-reveal-btn:hover {
-  background: rgba(99, 149, 255, 0.35);
-  border-color: rgba(99, 149, 255, 0.6);
-  box-shadow: 0 0 16px rgba(99, 149, 255, 0.2);
-}
-.vote-reveal-btn.active {
-  background: rgba(99, 149, 255, 0.35);
-  border-color: rgba(99, 149, 255, 0.6);
-}
-.vote-qr-title {
-  font-size: 1.1rem;
-  font-weight: 700;
-  color: rgba(255,255,255,0.7);
-}
-.vote-qr-box {
-  background: #fff;
-  padding: 16px;
-  border-radius: 16px;
-  box-shadow: 0 8px 32px rgba(0,0,0,0.4);
-}
-.vote-qr-box img { display: block; border-radius: 4px; }
-.vote-url-text {
-  font-size: 0.75rem;
-  color: rgba(255,255,255,0.35);
-  word-break: break-all;
-  text-align: center;
-  font-family: 'SF Mono', 'Menlo', monospace;
-}
-.vote-total {
-  text-align: center;
-  color: rgba(255,255,255,0.5);
-  font-size: 0.95rem;
-}
-.vote-total strong {
-  display: block;
-  font-size: 2.8rem;
-  font-weight: 800;
-  color: #fff;
-  margin-top: 4px;
-}
-.vote-reset-btn {
-  font-family: inherit;
-  font-size: 0.85rem;
-  font-weight: 600;
-  padding: 8px 24px;
-  border-radius: 8px;
-  border: 1px solid rgba(255,255,255,0.12);
-  background: rgba(255,255,255,0.05);
-  color: rgba(255,255,255,0.5);
-  cursor: pointer;
-  transition: all 0.2s;
-}
-.vote-reset-btn:hover {
-  background: rgba(239,68,68,0.15);
-  border-color: rgba(239,68,68,0.4);
-  color: #ef4444;
-}
-.vote-right {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-}
-.vote-bars {
-  display: flex;
-  flex-direction: column;
-  gap: 24px;
-  max-width: 900px;
-}
-.vote-bar-row {
-  display: flex;
-  align-items: center;
-  gap: 20px;
-  height: 64px;
-}
-.vote-bar-label {
-  width: 50px;
-  font-size: 2rem;
-  font-weight: 800;
-  text-align: center;
-  flex-shrink: 0;
-}
-.vote-bar-track {
-  flex: 1;
-  height: 100%;
-  background: rgba(255,255,255,0.04);
-  border-radius: 14px;
-  overflow: hidden;
-}
-.vote-bar-fill {
-  height: 100%;
-  border-radius: 14px;
-  transition: width 0.6s cubic-bezier(0.22, 1, 0.36, 1);
-  min-width: 0;
-  position: relative;
-}
-.vote-bar-fill::after {
-  content: '';
-  position: absolute;
-  inset: 0;
-  border-radius: 14px;
-  background: linear-gradient(180deg, rgba(255,255,255,0.15) 0%, transparent 60%);
-}
-.vote-bar-count {
-  width: 80px;
-  font-size: 1.5rem;
-  font-weight: 700;
-  text-align: right;
-  font-variant-numeric: tabular-nums;
-  color: rgba(255,255,255,0.7);
-  flex-shrink: 0;
-}
-.vote-bar-pct {
-  width: 70px;
-  font-size: 1.1rem;
-  font-weight: 600;
-  color: rgba(255,255,255,0.35);
-  font-variant-numeric: tabular-nums;
-  flex-shrink: 0;
-}
 
 /* ============ Responsive ============ */
 @media (max-width: 1200px) {
@@ -1127,9 +911,7 @@ body {
           <span class="hr-value" id="hrValue">72</span>
           <span class="hr-unit">bpm</span>
         </div>
-        <button class="vote-toggle-btn" id="voteToggle" onclick="toggleVoteOverlay()" title="Live Voting">
-          📊 Vote
-        </button>
+
       </div>
     </header>
 
@@ -1205,8 +987,7 @@ body {
           <button class="path-btn" data-path="anterior_mi">Anterior MI</button>
           <button class="path-btn" data-path="inferior_mi">Inferior MI</button>
           <button class="path-btn" data-path="dcm">DCM</button>
-          <button class="path-btn" data-path="hcm">HCM</button>
-          <button class="path-btn" data-path="takotsubo">Takotsubo</button>
+          <button class="path-btn" data-path="amyloidosis">Amyloidosis</button>
         </div>
       </div>
       <div class="control-group">
@@ -1245,33 +1026,7 @@ body {
     </footer>
   </div>
 
-  <!-- Voting Overlay -->
-  <div class="vote-overlay" id="voteOverlay">
-    <div class="vote-overlay-header">
-      <h1>📊 Live Voting</h1>
-      <div style="display:flex;gap:12px;align-items:center;">
-        <button class="vote-reveal-btn" id="voteRevealBtn" onclick="revealResults()">📈 결과 보기</button>
-        <button class="vote-close-btn" onclick="toggleVoteOverlay()">✕</button>
-      </div>
-    </div>
-    <div class="vote-overlay-body">
-      <div class="vote-left" id="voteLeftPanel">
-        <p class="vote-qr-title">Scan to Vote</p>
-        <div class="vote-qr-box">
-          <img id="voteQrImage" width="280" height="280" alt="QR Code">
-        </div>
-        <p class="vote-url-text" id="voteUrlText"></p>
-        <div class="vote-total">
-          <span>Total Responses</span>
-          <strong id="voteTotalCount">0</strong>
-        </div>
-        <button class="vote-reset-btn" onclick="resetVotesOverlay()">Reset</button>
-      </div>
-      <div class="vote-right" id="voteRightPanel" style="display:none;">
-        <div class="vote-bars" id="voteBars"></div>
-      </div>
-    </div>
-  </div>
+
 
   <script>
 /* ============================================================
@@ -1363,33 +1118,20 @@ const PATHOLOGIES = {
     peakShift: [0.01, -0.01, 0.02, -0.02, 0.01, -0.01, 0.02, -0.01, 0.01, -0.02, 0.02, -0.01, 0.01, -0.02, 0.02, -0.01, 0.01]
   },
 
-  hcm: {
-    name: 'HCM',
-    nameKo: '비후성 심근병증',
-    description: '비대칭 중격 비후. 중격 LS -5~-7% 현저 감소, 측벽 보존. GLS↓인데 EF 유지되는 전형적 EF-strain mismatch. 비대 분절에서 PSS 관찰.',
-    //                B-Ant  B-AS  B-IS  B-Inf B-IL  B-AL  M-Ant M-AS  M-IS  M-Inf M-IL  M-AL  A-Ant A-Sep A-Inf A-Lat Apex
-    strain:         [ -15,   -7,   -6,  -13,  -20,  -25,  -16,   -6,   -5,  -12,  -21,  -26,  -18,   -7,  -13,  -25,  -19],
-    pss:            [   0,    1,    1,    0,    0,    0,    0,    1,    1,    0,    0,    0,    0,    1,    0,    0,    0],
-    ef: 65,
-    wallMotion:     [0.70, 0.30, 0.25, 0.60, 1.00, 1.25, 0.75, 0.25, 0.20, 0.55, 1.05, 1.30, 0.85, 0.30, 0.60, 1.25, 0.90],
-    // HCM: no ESL (hypertrophy ≠ ischemia), PSS in hypertrophied segments only, mild dispersion
-    eslAmplitude:   Array(17).fill(0),
-    pssDelay:       [0.00, 0.06, 0.07, 0.00, 0.00, 0.00, 0.00, 0.07, 0.08, 0.00, 0.00, 0.00, 0.00, 0.06, 0.00, 0.00, 0.00],
-    peakShift:      [0.00, 0.02, 0.02, 0.00, 0.00, 0.00, 0.00, 0.02, 0.03, 0.00, 0.00, 0.00, 0.00, 0.02, 0.00, 0.00, 0.00]
-  },
 
-  takotsubo: {
-    name: 'Takotsubo',
-    nameKo: '타코츠보 심근병증',
-    description: '심첨부 풍선 (급성기). Apical LS -3~-7%, basal 과운동. 원형 분포 — MI와 감별점. 첨부에서 ESL + PSS 관찰. Dispersion은 MI와 다르게 territory 산발이 아닌 base-apex timing gradient (basal 정상 vs apical 지연).',
+  amyloidosis: {
+    name: 'Amyloidosis',
+    nameKo: '심장 아밀로이드증',
+    description: 'Typical apical-sparing pattern (cherry-on-top). Basal 전 분절 LS 현저 감소, mid 중등도 감소, apex 보존. Base→apex gradient 반전 (정상: apex>base). GLS 매우 저하 (~-10%). 아밀로이드 침착에 의한 전반적 wall thickening과 diastolic dysfunction 동반.',
     //                B-Ant  B-AS  B-IS  B-Inf B-IL  B-AL  M-Ant M-AS  M-IS  M-Inf M-IL  M-AL  A-Ant A-Sep A-Inf A-Lat Apex
-    strain:         [ -25,  -27,  -26,  -24,  -25,  -27,  -10,   -9,   -9,   -8,   -9,  -10,   -3,   -4,   -4,   -3,    5],
-    pss:            [   0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    1,    1,    1,    1,    1],
-    ef: 38,
-    wallMotion:     [1.30, 1.40, 1.35, 1.25, 1.30, 1.40, 0.40, 0.35, 0.35, 0.30, 0.35, 0.40, 0.08, 0.10, 0.10, 0.08, -0.15],
-    eslAmplitude:   [  0,    0,    0,    0,    0,    0,    3,    3,    3,    4,    3,    3,    7,    7,    7,    7,    9],
-    pssDelay:       [0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.05, 0.05, 0.05, 0.06, 0.05, 0.05, 0.13, 0.13, 0.13, 0.13, 0.15],
-    peakShift:      [0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.03, 0.03, 0.03, 0.04, 0.03, 0.03, 0.06, 0.06, 0.06, 0.06, 0.07]
+    strain:         [  -5,    1,   -5,   -4,   -7,   -6,   -8,   -7,   -7,   -8,  -11,  -10,  -17,  -17,  -18,  -17,  -19],
+    pss:            [   1,    1,    1,    1,    1,    1,    1,    1,    1,    1,    0,    0,    0,    0,    0,    0,    0],
+    ef: 52,
+    wallMotion:     [0.20, 0.05, 0.20, 0.18, 0.30, 0.25, 0.35, 0.30, 0.30, 0.35, 0.50, 0.42, 0.82, 0.82, 0.85, 0.82, 0.90],
+    // Amyloidosis: mild ESL in severely affected basal segments, PSS common in basal/mid
+    eslAmplitude:   [  2,    3,    3,    3,    1,    1,    1,    2,    2,    1,    0,    0,    0,    0,    0,    0,    0],
+    pssDelay:       [0.08, 0.10, 0.09, 0.09, 0.05, 0.06, 0.05, 0.06, 0.06, 0.05, 0.02, 0.03, 0.00, 0.00, 0.00, 0.00, 0.00],
+    peakShift:      [0.03, 0.04, 0.04, 0.04, 0.02, 0.02, 0.02, 0.03, 0.03, 0.02, 0.01, 0.01, 0.00, 0.00, 0.00, 0.00, 0.00]
   }
 };
 
@@ -1658,7 +1400,7 @@ function computeStrainWithTiming(phase, peak, wallMotion, timing) {
       const sysEndVal = peak * (0.5 + 0.15 * (1 - esl / 10));
       val = sysEndVal + (peak - sysEndVal) * Math.sin(t * Math.PI / 2);
     } else {
-      // PSS without ESL (e.g., HCM): continues past AVC
+      // PSS without ESL (e.g., Amyloidosis): continues past AVC
       const sysEndVal = peak * wallMotion * 0.6;
       val = sysEndVal + (peak * wallMotion - sysEndVal) * Math.sin(t * Math.PI / 2);
     }
@@ -3144,114 +2886,7 @@ function ecgWaveform(phase) {
   }
 }
 
-// ─── Voting Overlay ──────────────────────────────────────────
-const VOTE_COLORS = ['#6395ff', '#34d399', '#fbbf24', '#f97316', '#ef4444'];
-const VOTE_BG = ['rgba(99,149,255,0.25)', 'rgba(52,211,153,0.25)', 'rgba(251,191,36,0.25)', 'rgba(249,115,22,0.25)', 'rgba(239,68,68,0.25)'];
-let votePollingId = null;
-let voteInitialized = false;
 
-function initVoteBars() {
-  const barsEl = document.getElementById('voteBars');
-  if (!barsEl || barsEl.children.length > 0) return;
-  for (let i = 1; i <= 5; i++) {
-    const row = document.createElement('div');
-    row.className = 'vote-bar-row';
-    row.innerHTML = `
-      <span class="vote-bar-label" style="color: ${VOTE_COLORS[i-1]}">${i}</span>
-      <div class="vote-bar-track">
-        <div class="vote-bar-fill" id="vFill${i}" style="width: 0%; background: ${VOTE_BG[i-1]}; box-shadow: 0 0 20px ${VOTE_BG[i-1]};"></div>
-      </div>
-      <span class="vote-bar-count" id="vCount${i}">0</span>
-      <span class="vote-bar-pct" id="vPct${i}">0%</span>
-    `;
-    barsEl.appendChild(row);
-  }
-}
-
-function initVoteQR() {
-  // Get vote URL from the voting server's config endpoint
-  fetch('http://localhost:9000/api/config').then(r => r.json()).then(data => {
-    setVoteUrl(data.voteUrl);
-  }).catch(() => {
-    setVoteUrl('http://localhost:9000/vote');
-  });
-}
-
-function setVoteUrl(url) {
-  const img = document.getElementById('voteQrImage');
-  if (img) img.src = 'https://api.qrserver.com/v1/create-qr-code/?size=240x240&data=' + encodeURIComponent(url);
-  const txt = document.getElementById('voteUrlText');
-  if (txt) txt.textContent = url;
-}
-
-async function pollVotes() {
-  try {
-    const res = await fetch('http://localhost:9000/api/results');
-    const data = await res.json();
-    const total = Object.values(data).reduce((a, b) => a + b, 0);
-    const el = document.getElementById('voteTotalCount');
-    if (el) el.textContent = total;
-    for (let i = 1; i <= 5; i++) {
-      const count = data[String(i)] || 0;
-      const pct = total > 0 ? (count / total * 100) : 0;
-      const fill = document.getElementById('vFill' + i);
-      const cnt = document.getElementById('vCount' + i);
-      const pctEl = document.getElementById('vPct' + i);
-      if (fill) fill.style.width = pct + '%';
-      if (cnt) cnt.textContent = count;
-      if (pctEl) pctEl.textContent = Math.round(pct) + '%';
-    }
-  } catch(e) {}
-}
-
-async function resetVotesOverlay() {
-  try { await fetch('http://localhost:9000/api/reset', { method: 'POST' }); } catch(e) {}
-  pollVotes();
-}
-
-function toggleVoteOverlay() {
-  const overlay = document.getElementById('voteOverlay');
-  if (!overlay) return;
-  const isActive = overlay.classList.contains('active');
-  if (isActive) {
-    overlay.classList.remove('active');
-    if (votePollingId) { clearInterval(votePollingId); votePollingId = null; }
-  } else {
-    if (!voteInitialized) {
-      initVoteBars();
-      initVoteQR();
-      voteInitialized = true;
-    }
-    // Reset to QR-only state
-    const left = document.getElementById('voteLeftPanel');
-    const right = document.getElementById('voteRightPanel');
-    const btn = document.getElementById('voteRevealBtn');
-    if (left) left.classList.add('centered');
-    if (right) right.style.display = 'none';
-    if (btn) { btn.classList.remove('active'); btn.textContent = '📈 결과 보기'; }
-    
-    overlay.classList.add('active');
-    pollVotes();
-    votePollingId = setInterval(pollVotes, 800);
-  }
-}
-
-function revealResults() {
-  const left = document.getElementById('voteLeftPanel');
-  const right = document.getElementById('voteRightPanel');
-  const btn = document.getElementById('voteRevealBtn');
-  if (!right) return;
-  const isHidden = right.style.display === 'none';
-  if (isHidden) {
-    if (left) left.classList.remove('centered');
-    right.style.display = 'flex';
-    if (btn) { btn.classList.add('active'); btn.textContent = '📊 QR만 보기'; }
-  } else {
-    if (left) left.classList.add('centered');
-    right.style.display = 'none';
-    if (btn) { btn.classList.remove('active'); btn.textContent = '📈 결과 보기'; }
-  }
-}
 
 // ─── Start ───────────────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', init);
